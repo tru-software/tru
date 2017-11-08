@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import settings
+
 def SetupRemoteAddr(get_response):
 	"""
 	Middleware that sets REMOTE_ADDR based on HTTP_X_FORWARDED_FOR, if the
@@ -13,7 +15,12 @@ def SetupRemoteAddr(get_response):
 	anybody can "fake" their IP address. Only use this when you can absolutely
 	trust the value of HTTP_X_FORWARDED_FOR.
 	"""
+
+	INTERNAL_ADDRS = getattr(settings, 'INTERNAL_ADDRS', [])
+
 	def middleware(request):
+
+		request.IsBot = False
 
 		# request.META['REMOTE_ADDR'] = "2601:582:4003:ea10:c97d:259f:ec7e:604a"
 
@@ -30,9 +37,16 @@ def SetupRemoteAddr(get_response):
 		if 'HTTP_USER_AGENT' not in request.META:
 			request._broken_remote_addr = True
 
+		for i in INTERNAL_ADDRS:
+			if i.match(request.META['REMOTE_ADDR']):
+				request.META['INTERNAL_ADDR'] = True
+				break
+		else:
+			if 'INTERNAL_ADDR' in request.META:
+				del request.META['INTERNAL_ADDR']
+
 		return get_response(request)
 
 	return middleware
 
 # ----------------------------------------------------------------------------
-
