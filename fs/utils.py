@@ -9,7 +9,7 @@ import time
 import zlib
 import hashlib
 
-from . import converters
+from ..io import converters
 
 log = logging.getLogger(__name__)
 
