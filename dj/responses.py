@@ -104,7 +104,7 @@ class FileInMemory(object):
 				self.content = f.read()
 		else:
 			with open(self.path, 'r') as f:
-				self.content = f.read().encode('utf-8')
+				self.content = f.read().encode('utf8')
 
 		md5 = hashlib.md5()
 		md5.update(self.content)

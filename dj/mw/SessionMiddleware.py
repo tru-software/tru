@@ -7,7 +7,6 @@ import logging
 import os
 import random
 import datetime
-import hashlib
 
 from django.utils.cache import patch_vary_headers
 from django.utils.http import cookie_date

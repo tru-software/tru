@@ -6,7 +6,6 @@ import warnings
 import os
 import re
 import sys
-import hashlib
 import datetime
 import urllib.request, urllib.parse, urllib.error
 

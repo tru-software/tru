@@ -75,7 +75,7 @@ class DotPay(object):
 			"operation_datetime,operation_related_number,control,description,email,p_info,p_email,channel,channel_country,geoip_country").split(",")
 
 	def CRC(self, pin, fields):
-		return hashlib.sha256(pin + "".join(fields.get(i, '') for i in self.CRC_FIELDS)).hexdigest()
+		return hashlib.sha256((pin + "".join(fields.get(i, '') for i in self.CRC_FIELDS)).encode('utf8')).hexdigest()
 
 	@classmethod
 	def VerifyRemoteAddr(cls, addr):

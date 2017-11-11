@@ -48,7 +48,7 @@ class Przelewy24(object):
 
 	def CRC(self, *fields):
 		# print '|'.join(map(str, fields+(self.PRZELEWY24_CRC,) ))
-		return hashlib.md5('|'.join(map(str, fields+(self.PRZELEWY24_CRC,) ))).hexdigest()
+		return hashlib.md5(('|'.join(map(str, fields+(self.PRZELEWY24_CRC,))).encode('utf8'))).hexdigest()
 
 
 class PaymentForm(Przelewy24):
