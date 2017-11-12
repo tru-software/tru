@@ -28,7 +28,7 @@ class HTMLHelpers(object):
 	@staticmethod
 	def OptionSelected(cond):
 		return Markup(cond and 'selected="selected"' or '')
-	
+
 	@staticmethod
 	def Checked(cond):
 		return Markup(cond and 'checked="checked"' or '')
@@ -100,7 +100,7 @@ class HTMLHelpers(object):
 				date_field.strftime("%H:%M")
 			)
 		return date_field.strftime("%d.%m.%Y %H:%M")
-		
+
 	@staticmethod
 	def IterMonths(begin, end):
 
@@ -165,11 +165,11 @@ class HTMLHelpers(object):
 		now = datetime.datetime.now() if now is None else now
 		if now and now.date() == date:
 			return cls.PrettyTimeLong(date, now)
-		
 		else:
 			return "{}, godz.: {}".format(cls.PrettyTimeLong(date, now), date.strftime("%H:%M"))
 
-	def form_begin(self, func, attr={}, **kwattr):
+	@staticmethod
+	def form_begin(func, attr={}, **kwattr):
 
 		all_attr={}
 		all_attr.update(attr)
@@ -187,11 +187,11 @@ class HTMLHelpers(object):
 		all_attr.setdefault("enctype", "application/x-www-form-urlencoded")
 		all_attr.setdefault("action", "")
 		all_attr.setdefault("method", "post")
-		
+
 		if form_id:
 			all_attr.setdefault("name", form_id)
 			all_attr.setdefault("id", form_id)
-		
+
 		if not isinstance(all_attr['action'], str):
 			all_attr['action'] = all_attr['action']()
 
@@ -200,25 +200,28 @@ class HTMLHelpers(object):
 		target_input = """<input type="hidden" name="__action_target" value="{}" />""".format(target) if target else ""
 
 		return Markup("""<form {}>{}""".format(all_attr, target_input))
-		
 
-	def form_end(self):
+	@staticmethod
+	def form_end():
 		return Markup("""</form>""")
 
-	def input_hidden(self, name,value):
-		return Markup('<input type="hidden" name="%s" value="%s" />' % ( filters.html_escape(str(name)), filters.html_escape(str(value)) ))
+	@staticmethod
+	def input_hidden(name, value):
+		return Markup('<input type="hidden" name="%s" value="%s" />' % (filters.html_escape(str(name)), filters.html_escape(str(value))))
 
 	wiszace_znaki = re.compile('(^|\s)(a|i|o|u|w|z|I)(\s+)')
 
-	def Title2nobr(self, text):
+	@classmethod
+	def Title2nobr(cls, text):
 		"""
 			"koniec lini z kropka" => "koniec lini z&nbsp;kropka"
 		"""
-		return Markup(self.wiszace_znaki.sub(r'\1\2&nbsp;', str(filters.html_escape(text)) ))
+		return Markup(cls.wiszace_znaki.sub(r'\1\2&nbsp;', str(filters.html_escape(text)) ))
 
 	title2nobr = Title2nobr
 
-	def packer(self, seq, items):
+	@staticmethod
+	def packer(seq, items):
 		buf=[]
 		for i in seq:
 			buf.append(i)
@@ -240,7 +243,6 @@ class HTMLHelpers(object):
 		elif size.isdigit():
 			return int(size)
 		return None
-
 
 	@staticmethod
 	def Date(date_field, ucr=None, params=None):
@@ -322,7 +324,8 @@ class HTMLHelpers(object):
 			return text[:max_len] + "..."
 		return text
 
-	def FormBegin(self, func, attr={}, **kwattr):
+	@staticmethod
+	def FormBegin(func, attr={}, **kwattr):
 
 		all_attr={}
 		all_attr.update(attr)
@@ -342,13 +345,16 @@ class HTMLHelpers(object):
 			<input type="hidden" name="__action_target" value="%s" />
 		""" % (all_attr,target))
 
-	def FormEnd(self):
+	@staticmethod
+	def FormEnd():
 		return Markup("""</form>""")
 
-	def InputHidden(self, name,value):
-		return Markup('<input type="hidden" name="%s" value="%s" />' % ( filters.html_escape(str(name)), filters.html_escape(str(value)) ))
+	@staticmethod
+	def InputHidden(name, value):
+		return Markup('<input type="hidden" name="%s" value="%s" />' % (filters.html_escape(str(name)), filters.html_escape(str(value))))
 
-	def Packer(self, seq, items):
+	@staticmethod
+	def Packer(seq, items):
 		buf=[]
 		for i in seq:
 			buf.append(i)
@@ -358,11 +364,12 @@ class HTMLHelpers(object):
 		if len(buf):
 			yield buf
 
-	def ColumnsSpliter(self, seq, parts):
+	@staticmethod
+	def ColumnsSpliter(seq, parts):
 		l = len(seq)
 		if l:
 			last=0
-			p = int( l / parts )
+			p = l//parts
 			for i in range(parts):
 				to=last+p + (1 if l-last > (parts-i)*p else 0)
 				yield seq[last:to]

@@ -8,7 +8,7 @@ from .EnvironMiddleware import CatchExceptions
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound, HttpResponseServerError, HttpResponseServerError, Http404
 
-from core import FW
+import core as FW
 
 log = logging.getLogger(__name__)
 log_access = logging.getLogger('Access')

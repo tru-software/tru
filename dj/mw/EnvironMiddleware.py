@@ -9,7 +9,7 @@ import logging
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound, HttpResponseServerError, HttpResponseServerError, Http404
 from django.core import exceptions
-from core import FW
+import core as FW
 
 from tru.utils.backtrace import GetTraceback
 
