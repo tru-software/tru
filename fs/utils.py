@@ -98,8 +98,13 @@ def Download(url):
 
 # -------------------------------------------------------------------------------
 
-from urllib.parse import urlencode
-from urllib.parse import parse_qs, urlsplit, urlunsplit
+try:
+	# PY3
+	from urllib.parse import urlencode, parse_qs, urlsplit, urlunsplit
+except ImportError:
+	# PY2
+	from urlparse import parse_qs, urlsplit, urlunsplit
+	from urllib import urlencode
 
 def UpgradeURL(url, params):
 	"""Given a URL, set or replace a query parameter and return the
