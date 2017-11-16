@@ -14,7 +14,10 @@ from tru.fs.utils import TmpFile
 import mimetypes
 mimetypes.init()
 
-import iptcinfo3
+try:
+	import iptcinfo3
+except ImportError:
+	iptcinfo3 = None
 
 log = logging.getLogger(__name__)
 
@@ -368,6 +371,9 @@ class Operations(object):
 			self.metadata = metadata if metadata is not None else False
 			self.bgcolor = bgcolor or (255, 255, 255)
 
+			if iptcinfo3 is None and self.metadata:
+				raise ImportError("Cannot import iptcinfo3 module")
+
 		def __call__(self, src_path, src, buf, frames):
 
 			first_frame = frames[0] if isinstance(frames, list) else frames
@@ -407,7 +413,7 @@ class Operations(object):
 				save_params = {}
 
 
-			if self.metadata is True and fmt == 'JPEG' and src.format == 'JPEG':
+			if self.metadata is True and iptcinfo3 is not None and fmt == 'JPEG' and src.format == 'JPEG':
 
 				info = iptcinfo3.IPTCInfo(src_path)
 				if len(info.data) >= 4:
