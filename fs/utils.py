@@ -35,6 +35,16 @@ def fix_filename(filename):
 
 # ------------------------------------------------------------------------
 
+def MakeDirs(filepath, ex_cls=OSError):
+	dir = os.path.dirname(filepath)
+	if not os.path.isdir(dir):
+		try:
+			os.makedirs(dir)
+		except OSError as ex:
+			raise ex_cls('Cannot create a directory {}: {}'.format(dir, ex))
+
+# ------------------------------------------------------------------------
+
 def upload_file(post_file_dict, path, filename):
 
 	# FIXME: Ensure if it is unique
@@ -47,7 +57,7 @@ def upload_file(post_file_dict, path, filename):
 	filepath = os.path.join(rel_path, filename)
 
 	f = file( filepath , "wb")
-	if f == None:
+	if f is None:
 		raise Exception('Nie można toworzyć pliku do zapisu: %s' % filepath)
 	f.write(post_file_dict.read())
 	f.close()
@@ -56,24 +66,20 @@ def upload_file(post_file_dict, path, filename):
 
 # ------------------------------------------------------------------------
 
-def path_replace_ext(path, ext, append=''):
+def path_replace_ext(path, ext=None, append=''):
 	""" Zmienia rozszrzerzenie pliku w podanej scieżce opcjonalnie dodaje postfix do nazwy pliku.
 	path_replace_ext('filename.ext1', 'ext2') == 'filename.ext2'
 	path_replace_ext('filename.ext1', 'ext2', '_x') == 'filename_x.ext2'
 	path_replace_ext('filename.ext1, None, '_x') == 'filename_x.ext1'
 	path_replace_ext('filename', 'xxx') == 'filename.xxx'
-	
+
 	inny kod który może być lepszy:
 		DIR = settings.UPLOAD_DIR + '/'
 		jpg = '.'.join( self.path.split('.')[:-1] ) + '.jpg'
-	
+
 	"""
-	basename = os.path.splitext( os.path.basename( path ) )
-	if ext == None:
-		ext = basename[1]
-	else:
-		ext = '.'+ext
-	return os.path.dirname( path ) + "/" + basename[0] + append + ext
+	basename, path_ext = os.path.splitext(os.path.basename(path))
+	return os.path.dirname(path) + "/" + basename + append + ('.' + ext if ext is not None else path_ext)
 
 # -------------------------------------------------------------------------------------------
 
@@ -183,3 +189,19 @@ def CreateCrcLinkMD5(filename, dir, urldir, block_size=1024*8):
 	return "%s/%s?_=%s" % (urldir.rstrip('/'), filename, md5.hexdigest())
 
 CreateCrcLink = CreateCrcLinkMD5
+
+# -------------------------------------------------------------------------------
+
+class TmpFile:
+	def __init__ (self, filepath, mode='wb', perms=None):
+		self.filepath = filepath
+		self.f = open(filepath + '.tmp', mode=mode)
+		self.perms = perms
+	def __enter__ (self):
+		return self.f
+	def __exit__ (self, exc_type, exc_value, traceback):
+		tmp = self.filepath+'.tmp'
+		self.f.close()
+		if self.perms is not None:
+			os.chmod(tmp, self.perms)
+		os.rename(tmp, self.filepath)

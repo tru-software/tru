@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
-
-import settings
-
 import logging
 import os
 import xmlwitch
@@ -14,12 +10,12 @@ class XMLBuilder(xmlwitch.Builder):
 
 	class Abort(Exception):
 		pass
-	
+
 	def __init__(self, filepath, **kwargs):
 		self.filepath = filepath
 		self.mtime = None
 		xmlwitch.Builder.__init__(self, **kwargs)
-		
+
 	def __enter__(self):
 		return self
 
@@ -46,7 +42,7 @@ class XMLBuilder(xmlwitch.Builder):
 			mtime = time.mktime(mtime.timetuple())
 			os.utime(self.filepath, (mtime, mtime))
 			os.utime(dest_filename, (mtime, mtime))
-	
+
 	def UpdateLastModifyTime(self, mtime):
 		if self.mtime is None or self.mtime < mtime:
 			self.mtime = mtime
