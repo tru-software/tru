@@ -371,8 +371,8 @@ class Operations(object):
 			self.metadata = metadata if metadata is not None else False
 			self.bgcolor = bgcolor or (255, 255, 255)
 
-			if iptcinfo3 is None and self.metadata:
-				raise ImportError("Cannot import iptcinfo3 module")
+			#if iptcinfo3 is None and self.metadata:
+				#raise ImportError("Cannot import iptcinfo3 module")
 
 		def __call__(self, src_path, src, buf, frames):
 
@@ -413,7 +413,10 @@ class Operations(object):
 				save_params = {}
 
 
-			if self.metadata is True and iptcinfo3 is not None and fmt == 'JPEG' and src.format == 'JPEG':
+			if self.metadata is True and fmt == 'JPEG' and src.format == 'JPEG':
+
+				if iptcinfo3 is None:
+					raise ImportError("Cannot import iptcinfo3 module")
 
 				info = iptcinfo3.IPTCInfo(src_path)
 				if len(info.data) >= 4:
