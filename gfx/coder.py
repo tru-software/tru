@@ -34,6 +34,9 @@ from .thumbs import Operations
 Hash = lambda text: (zlib.adler32(text if isinstance(text, bytes) else text.encode('utf8')) & 0xFFFFFFFF)
 Distribution = lambda text, options: Hash(text) % options
 
+import string
+from tru.io import converters
+EncodeHash, DecodeHash = converters.make_encoder(string.digits + string.ascii_lowercase + string.ascii_uppercase)
 
 class ImageType(object):
 
@@ -104,7 +107,7 @@ class ImageType(object):
 		op_code = 0x02
 
 		def __init__(self, cx, cy=None, expand=False):
-			super(Operations.FitWidth, self).__init__(cx, cy)
+			super(ImageType.FitWidth, self).__init__(cx, cy)
 			self.expand = expand
 
 		def get_params(self, d):
@@ -137,7 +140,7 @@ class ImageType(object):
 		op_code = 0x03
 
 		def __init__(self, cx, cy):
-			super(Operations.FitAll, self).__init__(cx, cy)
+			super(ImageType.FitAll, self).__init__(cx, cy)
 
 		def get_params(self, d):
 			d['thumb_type'] = 'FitAll'
@@ -155,7 +158,7 @@ class ImageType(object):
 
 		def GetCropWithPoint(self, img_w, img_h, x, y):
 
-			thumb_w, thumb_h = self.cx, self.cy
+			thumb_w, thumb_h = self.w, self.h
 
 			if img_w <= thumb_w and img_h <= thumb_h:
 				return None
@@ -204,7 +207,7 @@ class ImageType(object):
 		op_code = 0x04
 
 		def __init__(self, cx, cy):
-			super(Operations.Force, self).__init__(cx, cy)
+			super(ImageType.Force, self).__init__(cx, cy)
 
 		def get_params(self, d):
 			d['thumb_type'] = 'Force'
@@ -233,7 +236,7 @@ class ImageType(object):
 		op_code = 0x05
 
 		def __init__(self, cx, cy):
-			super(Operations.MaxBox, self).__init__(cx, cy)
+			super(ImageType.MaxBox, self).__init__(cx, cy)
 
 		def get_params(self, d):
 			d['thumb_type'] = 'MaxBox'
@@ -262,7 +265,7 @@ class ImageType(object):
 		op_code = 0x06
 
 		def __init__(self, cx, cy, crop=None):
-			super(Operations.Manual, self).__init__(cx, cy, crop)
+			super(ImageType.Manual, self).__init__(cx, cy, crop)
 
 		def get_params(self, d):
 			d['thumb_type'] = 'Manual'
@@ -309,25 +312,24 @@ class ImageType(object):
 				metadata=False, progressive=True, quality=95, optimize=True):
 		self.id = id
 		self.thumb = thumb
-		self.format = None # format
 		self.descr = descr
 		self.watermark = watermark
 		self.prefix = prefix
 		self.restricted = restricted
 		self.color = 0
 		self.contrast = 0
-		self.brightness = 0 
+		self.brightness = 0
 		self.deprecated = False
 		self.tmp_preview = False
 		self.is_custom = False
-		self.save_to = Operations.SaveToBuf(progressive=progressive, quality=quality, optimize=optimize, metadata=metadata)
+		self.save_to = Operations.SaveToBuf(format=format, progressive=progressive, quality=quality, optimize=optimize, metadata=metadata)
 
 	def get_path(self, image_path, keep_org_ext=False, postfix=None, force_custom=False, force_format=None):
 
 		if isinstance(self.thumb, ImageType.Original) and not force_custom:
 			return image_path
 
-		fmt = force_format or self.format
+		fmt = force_format or self.save_to.format
 
 		ext = 'jpg'
 		if fmt == 'GIF':
@@ -340,18 +342,18 @@ class ImageType(object):
 			if keep_org_ext:
 				ext = None
 
-		return path_replace_ext(image_path, ext, postfix or '_%s' % self.id)
+		return path_replace_ext(image_path, ext, postfix or ('_%s' % self.id))
 
 	def get_params(self, dict=None):
 		dict = dict if dict is not None else {}
 
 		if self.thumb is not None:
 			self.thumb.get_params(dict)
-		if self.format is not None:
-			dict['format'] = self.format
+		if self.save_to.format is not None:
+			dict['format'] = self.save_to.format
 		if self.watermark:
 			dict['watermark'] = True
-		if self.metadata:
+		if self.save_to.metadata:
 			dict['metadata'] = True
 
 		dict['progressive'] = self.save_to.progressive
@@ -362,9 +364,10 @@ class ImageType(object):
 		dict['brightness'] = self.brightness
 		return dict
 
-	def GetOps(self, watermark=None):
+	def GetOps(self, watermark=None, allow_resize=True):
 		# Returns list of image transformations
-		yield self.thumb
+		if allow_resize is True:
+			yield self.thumb
 		if self.color:
 			yield Operations.Color(self.color)
 		if self.contrast:
@@ -407,7 +410,7 @@ class ImageType(object):
 		if org_hash != trx_hash:
 			# Hash może być wyliczany z dwóch różnych źródeł: oryginalna nazwa pliku lub zakodowana do url (urlencoded)
 			# Sprawdzane są oba przypadki - któryś może być prawdziwy.
-			trx_hash = Hash(key + trx + '/'.join(map(quote, filename.decode('utf8').split('/'))).encode('utf8'))
+			trx_hash = Hash(key + trx + '/'.join(map(quote, (i.encode('utf8') for i in filename.decode('utf8').split('/')))))
 
 
 		if PY2:
@@ -427,19 +430,34 @@ class ImageType(object):
 			if org_hash != trx_hash:
 				# Hash może być wyliczany z dwóch różnych źródeł: oryginalna nazwa pliku lub zakodowana do url (urlencoded)
 				# Sprawdzane są oba przypadki - któryś może być prawdziwy.
-				trx_hash = hash(key + trx + '/'.join(map(quote, filename.decode('utf8').split('/'))).encode('utf8'))
+				trx_hash = hash(key + trx + '/'.join(map(quote, (i.encode('utf8') for i in filename.decode('utf8').split('/')))))
 
 		if org_hash != trx_hash:
 			raise ValueError('Invalid checksum {} != {}'.format(org_hash, trx_hash))
 
+		progressive = False
+		optimize = bool(format & 0x20)
+		tmp_preview = bool(format & 0x10)
+		force_format = format & 0x0F
+		if force_format == 0x01:
+			format = None
+		elif force_format == 0x02:
+			format = 'JPEG'
+		elif force_format == 0x03:
+			format = 'JPEG'
+			progressive = True
+		elif force_format == 0x04:
+			format = 'PNG'
+		elif force_format == 0x05:
+			format = 'GIF'
+
 		thumb = ImageType.classes_map[op_code].decode(trx[6:])
-		it = ImageType(0x9999, thumb, None, 'Custom format', watermark=False, prefix='', quality=quality)
+		it = ImageType(0x9999, thumb, format, 'Custom format', watermark=False, prefix='', quality=quality, progressive=progressive, optimize=optimize)
 
 		it.color = color
 		it.contrast = contrast
 		it.brightness = brightness
-		it.tmp_preview = format >= 0x10
-		it.format = None # TODO: różne formaty
+		it.tmp_preview = tmp_preview
 
 		return it
 
@@ -447,11 +465,23 @@ class ImageType(object):
 
 		assert isinstance(key, bytes), "Key must be an instance of bytes, got {}".format(repr(key))
 
-		# TODO: różne formaty
-		format = 0x01 # JPEG, PNG, GIF?,
+		format = 0x01  # Default
+
+		force_format = kwargs.get('format') or self.save_to.format or 'JPEG'
+		if force_format == 'JPEG':
+			format = 0x02
+			if kwargs.get('progressive') is True or self.save_to.progressive is True:
+				format = 0x03  # JPEG+progressive
+		elif force_format == 'PNG':
+			format = 0x04
+		elif force_format == 'GIF':
+			format = 0x05
 
 		if self.tmp_preview:
-			format = 0x10
+			format &= 0x10
+
+		if self.save_to.optimize:
+			format &= 0x20
 
 		color, contrast, brightness = self.color, self.contrast, self.brightness
 		if 'color' in kwargs:
@@ -461,12 +491,12 @@ class ImageType(object):
 		if 'brightness' in kwargs:
 			brightness = kwargs['brightness']
 
-		trx = pack('!BBBbbb', format, self.quality, self.thumb.op_code, color, contrast, brightness) + self.thumb._getOpParams()
+		trx = pack('!BBBbbb', format, self.save_to.quality, self.thumb.op_code, color, contrast, brightness) + self.thumb._getOpParams()
 
 		if ((len(trx)+4) % 3):
 			trx += pack('!B', 0) * (3-((len(trx)+4) % 3))
 
-		trx_hash = Distribution(key + trx + filename.encode('utf8'))
+		trx_hash = Hash(key + trx + filename.encode('utf8'))
 		return urlsafe_b64encode(trx + pack('!I', trx_hash)).decode('ascii')
 
 	def Clone(self, thumb=None, is_custom=None):

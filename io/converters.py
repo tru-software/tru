@@ -332,18 +332,18 @@ def utf8_clean_string(text):
 
 	text = utf8_case_fold_nfkc(text)
 	text = strtr(text, homographs)
-	
+
 	#// Other control characters
 	# $text = preg_replace('#(?:[\x00-\x1F\x7F]+|(?:\xC2[\x80-\x9F])+)#', '', $text);
-	text = re.sub( r'#(?:[\x00-\x1F\x7F]+|(?:\xC2[\x80-\x9F])+)#', '', text )
+	text = re.sub(r'#(?:[\x00-\x1F\x7F]+|(?:\xC2[\x80-\x9F])+)#', '', text)
 
 	#// we need to reduce multiple spaces to a single one
 	# $text = preg_replace('# {2,}#', ' ', $text);
-	text = re.sub( r'# {2,}#', ' ', text )
+	text = re.sub(r'# {2,}#', ' ', text)
 
 	#// we can use trim here as all the other space characters should have been turned
 	#// into normal ASCII spaces by now
-	return text.strip() # trim($text);
+	return text.strip()  # trim($text);
 
 # -----------------------------------------------------------------------------
 
@@ -354,7 +354,7 @@ def unpack(array):
 				yield x
 		else:
 			yield i
-	
+
 # -----------------------------------------------------------------------------
 
 def getint(v):
@@ -371,15 +371,15 @@ def make_encoder(baseString):
 		raise ValueError("Duplicate characters in encoding string")
 
 	def encode(x):
-		if x==0:
+		if x == 0:
 			return baseString[0]  # Only needed if don't want '' for 0
-		l=[]
-		while x>0:
+		l = []
+		while x > 0:
 			l.append(baseString[x % size])
 			x //= size
 		return ''.join(l)
 
 	def decode(s):
-		return sum(d[ch] * size**i for (i,ch) in enumerate(s))
+		return sum(d[ch] * size**i for (i, ch) in enumerate(s))
 
 	return encode, decode

@@ -205,8 +205,36 @@ class TmpFile:
 	def __enter__ (self):
 		return self.f
 	def __exit__ (self, exc_type, exc_value, traceback):
-		tmp = self.filepath+'.tmp'
 		self.f.close()
-		if self.perms is not None:
-			os.chmod(tmp, self.perms)
-		os.rename(tmp, self.filepath)
+		tmp = self.filepath+'.tmp'
+		if exc_type is None:
+			if self.perms is not None:
+				os.chmod(tmp, self.perms)
+			os.rename(tmp, self.filepath)
+		else:
+			try:
+				os.remove(tmp)
+			except IOError:
+				pass
+		return False
+
+# -------------------------------------------------------------------------------
+
+def utf8(s):
+	if isinstance(s, bytes):
+		return s
+	return s.encode('utf8')
+
+# -------------------------------------------------------------------------------
+
+def FindFileExt(dir_name, base_name):
+
+	for i in ('jpg', 'JPG', 'png', 'tif', 'jpeg', 'gif', 'tiff', 'PNG', 'GIF'):
+		if os.path.isfile(utf8(os.path.join(dir_name, base_name+i))):
+			return i
+	else:
+		for i in os.listdir(utf8(dir_name)):
+			if i.startswith(base_name) and os.path.isfile(utf8(os.path.join(dir_name, i))):
+				return i[i.rfind('.')+1:]
+
+	return None

@@ -58,6 +58,15 @@ Image.register_extension(BetterGifImageFile.format, ".gif")
 Image.register_mime(BetterGifImageFile.format, "image/gif")
 """
 
+class ThumbError(Exception):
+	pass
+
+
+def coalesce(*args):
+	for i in args:
+		if i is not None:
+			return i
+
 # -------------------------------------------------------------------
 
 try:
@@ -363,8 +372,8 @@ class Operations(object):
 
 	class SaveToBuf(Base):
 
-		def __init__(self, fmt=None, quality=None, optimize=None, progressive=None, metadata=None, bgcolor=None):
-			self.fmt = fmt
+		def __init__(self, format=None, quality=None, optimize=None, progressive=None, metadata=None, bgcolor=None):
+			self.format = format
 			self.optimize = optimize if optimize is not None else True
 			self.progressive = progressive if progressive is not None else True
 			self.quality = quality if quality is not None else 95
@@ -374,10 +383,20 @@ class Operations(object):
 			#if iptcinfo3 is None and self.metadata:
 				#raise ImportError("Cannot import iptcinfo3 module")
 
+		def Clone(self, format=None, quality=None, optimize=None, progressive=None, metadata=None, bgcolor=None):
+			return Operations.SaveToBuf(
+				format=coalesce(format, self.format),
+				quality=coalesce(quality, self.quality),
+				optimize=coalesce(optimize, self.optimize),
+				progressive=coalesce(progressive, self.progressive),
+				metadata=coalesce(metadata, self.metadata),
+				bgcolor=coalesce(bgcolor, self.bgcolor)
+			)
+
 		def __call__(self, src_path, src, buf, frames):
 
 			first_frame = frames[0] if isinstance(frames, list) else frames
-			fmt = self.fmt or src.format
+			fmt = self.format or src.format
 
 			if fmt != 'GIF': # or PNG - TODO
 				frames = first_frame
@@ -460,9 +479,11 @@ def CreateThumb(image_path, thumb_path, operations, save):
 
 	except IOError as e:
 		log.error("Cannot store thumbnail '%s':%s\n%s"%(image_path, e, GetTraceback(e)))
+		raise ThumbError("Cannot store thumbnail: {}".format(e))
 
 	except Exception as e:
 		log.error("Cannot create thumbnail '%s':%s\n%s"%(image_path, e, GetTraceback(e)))
+		raise ThumbError("Cannot create thumbnail: {}".format(e))
 
 # Callbacks used for new images opitmisations: pngquant, gifsicle, jpegoptim; see ImageExternalOpt
 CreateThumb.OnNewImage = []
