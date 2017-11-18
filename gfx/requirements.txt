@@ -1,4 +1,4 @@
 chardet==3.0.4
 -e git://github.com/tomaszhlawiczka/chared.git@21376229710b2e1e84b140ab199ecb7ceb1b8076#egg=chared
-IPTCInfo3==1.9.5.post8
+-e git://github.com/tomaszhlawiczka/iptcinfo3.git@master##egg=IPTCInfo3
 Pillow==4.3.0
