@@ -121,6 +121,7 @@ def Transform(source, ops):
 
 		return all_frames
 
+	"""
 	if source.mode == 'RGBA':
 		# białe tło dla obrazków
 		if params.get('format') == 'JPEG':
@@ -128,7 +129,8 @@ def Transform(source, ops):
 			bg = Image.new('RGB', source.size, (255, 255, 255))
 			bg.paste(source, mask=source.split()[3])  # 3 is the alpha channel
 			source = bg
-	elif source.mode != 'RGB':
+	"""
+	if source.mode != 'RGB':
 		source = source.convert('RGBA')
 
 	for op in ops:
