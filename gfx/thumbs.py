@@ -274,8 +274,8 @@ class Operations(object):
 
 			img_w, img_h = img.size
 
-			if img_w > thumb_w or img_h > thumb_h:
-				img = img.resize((thumb_w, thumb_h), Image.ANTIALIAS)
+			if img_w > self.w or img_h > self.h:
+				img = img.resize((self.w, self.h), Image.ANTIALIAS)
 
 			return img
 
