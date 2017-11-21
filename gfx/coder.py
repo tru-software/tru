@@ -61,7 +61,7 @@ class ImageType(object):
 			return (None, None)
 
 		def _getOpParams(self):
-			return pack('!HH', self.cx or 0, self.cy or 0)
+			return pack('!HH', self.w or 0, self.h or 0)
 
 		def GetCropWithPoint(self, img_w, img_h, x, y):
 			return None
@@ -92,7 +92,7 @@ class ImageType(object):
 			return 'Bez zmian'
 
 		def get_size(self):
-			return (None,None)
+			return (None, None)
 
 		@classmethod
 		def decode(cls, data):

@@ -17,7 +17,7 @@ import hashlib
 import base64
 import urllib.request, urllib.parse, urllib.error
 import copy
-from io import StringIO
+from io import BytesIO
 
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseServerError, HttpResponseForbidden, HttpResponseNotModified, StreamingHttpResponse
 from django.utils.http import http_date
@@ -40,7 +40,7 @@ class ImageResponse(StreamingHttpResponse):
 			raise ValueError("Incorrect image format: '%s', choose one of %r" % (format, list(ImageResponse.mimes.keys())))
 
 		if not hasattr(img, 'read'):
-			buf = StringIO()
+			buf = BytesIO()
 			img.save(buf, format)
 			img = buf
 		img.seek(0)
