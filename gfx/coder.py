@@ -366,7 +366,7 @@ class ImageType(object):
 
 	def GetOps(self, watermark=None, allow_resize=True):
 		# Returns list of image transformations
-		if allow_resize is True:
+		if allow_resize is True and isinstance(self.thumb, Operations.Transform):
 			yield self.thumb
 		if self.color:
 			yield Operations.Color(self.color)
