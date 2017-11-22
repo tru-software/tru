@@ -37,7 +37,8 @@ log = logging.getLogger(__name__)
 # im.save("file.jpg", optimize=1)
 
 from PIL import ImageFile
-ImageFile.MAXBLOCK = 4096 * 3 * 1024 * 4 # default is 64k
+ImageFile.MAXBLOCK = 4096 * 3 * 1024 * 4  # default is 64k
+ImageFile.LOAD_TRUNCATED_IMAGES = True  # https://stackoverflow.com/questions/42671252/python-pillow-valueerror-decompressed-data-too-large
 
 # -------------------------------------------------------------------
 
