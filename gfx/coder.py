@@ -404,7 +404,7 @@ class ImageType(object):
 		if org_hash != trx_hash:
 			# Hash może być wyliczany z dwóch różnych źródeł: oryginalna nazwa pliku lub zakodowana do url (urlencoded)
 			# Sprawdzane są oba przypadki - któryś może być prawdziwy.
-			trx_hash = Hash(key + trx + '/'.join(map(quote, (i.encode('utf8') for i in filename.decode('utf8').split('/')))))
+			trx_hash = Hash(key + trx + '/'.join(map(quote, (i.encode('utf8') for i in filename.decode('utf8').split('/')))).encode('ascii'))
 
 
 		if PY2:
