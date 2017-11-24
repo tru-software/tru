@@ -19,11 +19,9 @@ import copy
 from io import BytesIO
 
 try:
-	import urllib.request
-	from urllib.parse import urlencode
-	import urllib.error
+	from urllib.parse import urlencode, quote
 except ImportError:
-	from urllib import urlencode
+	from urllib import urlencode, quote
 
 
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseServerError, HttpResponseForbidden, HttpResponseNotModified, StreamingHttpResponse
@@ -216,9 +214,9 @@ def SendFileResponse(request, path, nocache=False, download=False, tmp=False, ag
 			# response['Pragma'] = 'no-cache'
 
 		if upload_path:
-			response['X-Accel-Redirect'] = '/protected-files' + urllib.parse.quote(path)
+			response['X-Accel-Redirect'] = '/protected-files' + quote(path)
 		elif static_path:
-			response['X-Accel-Redirect'] = '/protected-static' + urllib.parse.quote(path)
+			response['X-Accel-Redirect'] = '/protected-static' + quote(path)
 		else:
 			raise ValueError("Jedna z opcji powinna być wybrana: upload_path, static_path")
 
@@ -244,7 +242,7 @@ class RobotsTxtFactory(object):
 
 	def Response(self):
 		return HttpResponse(self.content, content_type='text/plain')
-	
+
 	def Freeze(self):
 		x = Freeze()
 		x.content = self.content
