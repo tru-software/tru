@@ -7,7 +7,13 @@ import os
 import re
 import sys
 import datetime
-import urllib.request, urllib.parse, urllib.error
+
+try:
+	import urllib.request
+	from urllib.parse import urlencode
+	import urllib.error
+except ImportError:
+	from urllib import urlencode
 
 from mako import filters
 from mako.filters import html_escape

@@ -15,9 +15,16 @@ import mimetypes
 import json
 import hashlib
 import base64
-import urllib.request, urllib.parse, urllib.error
 import copy
 from io import BytesIO
+
+try:
+	import urllib.request
+	from urllib.parse import urlencode
+	import urllib.error
+except ImportError:
+	from urllib import urlencode
+
 
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseServerError, HttpResponseForbidden, HttpResponseNotModified, StreamingHttpResponse
 from django.utils.http import http_date
