@@ -3,37 +3,12 @@
 import re
 import datetime
 import hashlib
+import string
+import zlib
 
-from django.utils.html import simple_email_re as email_re
-
-
-# ----------------------------------------------------------------------------
-
-def IsValidEmail(email):
-    return bool(email_re.match(email))
+from . import converters
 
 # ----------------------------------------------------------------------------
-
-postcode_re = re.compile("^[0-9]{3}\-[0-9]{2}$")
-def IsValidPostcode(postcode):
-	return bool(postcode_re.match(postcode))
-
-# ----------------------------------------------------------------------------
-
-from decimal import Decimal
-def ParsePrice(price):
-	price = str(price).replace(",", ".").replace(" ", "").strip()
-	if not price or not re.match("^[0-9]+(\.[0-9]{1,2})?$", price):
-		raise ValueError("Nieprawidłowa wartość liczbowa")
-	return int(Decimal(price) * 100)
-
-# ----------------------------------------------------------------------------
-
-def TimeInRange(time_range, now=None):
-	now = now or datetime.datetime.now()
-	return (now.hour * 100 + now.minute) in time_range
-
-# -------------------------------------------------------------------------------
 
 md5_constructor, sha_constructor = hashlib.md5, hashlib.sha1
 
@@ -57,16 +32,25 @@ def get_hexdigest(algorithm, salt, raw_password, hsh=None):
 	return None
 	# raise ValueError("Got unknown password algorithm type in password.")
 
-
 # -------------------------------------------------------------------------------
 
-import string
-from tru.io import converters
+
 def Hash(text):
 	return (zlib.adler32(text if isinstance(text, bytes) else text.encode('utf8')) & 0xFFFFFFFF)
 
-def Distribution(lambda text, options):
+
+def Distribution(text, options):
 	return Hash(text) % options
+
+# -------------------------------------------------------------------------------
 
 EncodeHash, DecodeHash = converters.make_encoder(string.digits + string.ascii_lowercase + string.ascii_uppercase)
 
+# -------------------------------------------------------------------------------
+
+def coalesce(*args):
+	for i in args:
+		if i is not None:
+			return i
+
+# -------------------------------------------------------------------------------

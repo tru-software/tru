@@ -10,6 +10,7 @@ import functools
 
 from tru.utils.backtrace import GetTraceback
 from tru.fs.utils import TmpFile
+from tru.io.hash import Hash, Distribution, EncodeHash, DecodeHash, coalesce
 
 import mimetypes
 mimetypes.init()
@@ -63,10 +64,6 @@ class ThumbError(Exception):
 	pass
 
 
-def coalesce(*args):
-	for i in args:
-		if i is not None:
-			return i
 
 # -------------------------------------------------------------------
 

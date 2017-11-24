@@ -27,16 +27,10 @@ import collections
 from struct import pack, unpack
 from base64 import urlsafe_b64decode, urlsafe_b64encode
 
-from ..fs.utils import path_replace_ext
+from tru.fs.utils import path_replace_ext
+from tru.io.hash import Hash, Distribution, EncodeHash, DecodeHash
 from .thumbs import Operations
 
-
-Hash = lambda text: (zlib.adler32(text if isinstance(text, bytes) else text.encode('utf8')) & 0xFFFFFFFF)
-Distribution = lambda text, options: Hash(text) % options
-
-import string
-from tru.io import converters
-EncodeHash, DecodeHash = converters.make_encoder(string.digits + string.ascii_lowercase + string.ascii_uppercase)
 
 class ImageType(object):
 
