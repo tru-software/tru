@@ -10,6 +10,11 @@ from . import converters
 
 # ----------------------------------------------------------------------------
 
+try:
+	_unicode = unicode
+except NameError:
+	_unicode = str
+
 md5_constructor, sha_constructor = hashlib.md5, hashlib.sha1
 
 def get_hexdigest(algorithm, salt, raw_password, hsh=None):
@@ -36,7 +41,18 @@ def get_hexdigest(algorithm, salt, raw_password, hsh=None):
 
 
 def Hash(text):
-	return (zlib.adler32(text if isinstance(text, bytes) else text.encode('utf8')) & 0xFFFFFFFF)
+
+	if isinstance(text, dict):
+		return Hash('.'.join(("%s=%s;"%(k, Hash(v)) for k, v in sorted(text.items()))))
+	elif isinstance(text, (list, set)):
+		return Hash(tuple(map(Hash, text)))
+	elif isinstance(text, _unicode):
+		text = text.encode('utf8')
+
+	if not isinstance(text, bytes):
+		text = repr(text)
+
+	return zlib.adler32(text) & 0xFFFFFFFF
 
 
 def Distribution(text, options):
