@@ -193,7 +193,7 @@ class Operations(object):
 
 			if not self.h:
 				if img_w > self.w:
-					img = img.resize((thumb_wself.wimg_h*self.w/img_w), Image.ANTIALIAS)
+					img = img.resize((self.w, img_h*self.w/img_w), Image.ANTIALIAS)
 			else:
 				if img_w > self.w or img_h > self.h:
 					scale = max(float(img_w)/self.w, float(img_h)/self.h)
