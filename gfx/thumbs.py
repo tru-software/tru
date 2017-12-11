@@ -100,7 +100,7 @@ def Transform(source, ops):
 					if x1 != w or y1 != h:
 						new_frame.paste(last_frame, (0, 0))
 
-				if not im.getpalette():
+				if not im.getpalette() and palette is not None:
 					im.putpalette(palette)
 
 				new_frame.paste(im, (0, 0), im.convert('RGBA'))
