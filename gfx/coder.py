@@ -472,10 +472,10 @@ class ImageType(object):
 			format = 0x05
 
 		if self.tmp_preview:
-			format &= 0x10
+			format |= 0x10
 
 		if self.save_to.optimize:
-			format &= 0x20
+			format |= 0x20
 
 		color, contrast, brightness = self.color, self.contrast, self.brightness
 		if 'color' in kwargs:
