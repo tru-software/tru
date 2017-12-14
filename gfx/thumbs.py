@@ -4,6 +4,8 @@ import os, sys
 from PIL import Image, ImageEnhance
 from io import BytesIO
 
+from . import pil_fixes
+
 import datetime
 import logging
 import functools
@@ -23,47 +25,9 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 # -------------------------------------------------------------------
-# http://mail.python.org/pipermail/image-sig/1999-August/000816.html
-# after some digging, this seems to be a limitation in
-# the JPEG library (incremental decoding doesn't work
-# with optimize).
-# 
-# you might be able to work around this by making
-# PIL's output buffer large enough to hold the entire
-# output image:
-# 
-# import ImageFile
-# ImageFile.MAXBLOCK = 1000000 # default is 64k
-# 
-# im.save("file.jpg", optimize=1)
-
-from PIL import ImageFile
-ImageFile.MAXBLOCK = 4096 * 3 * 1024 * 4  # default is 64k
-ImageFile.LOAD_TRUNCATED_IMAGES = True  # https://stackoverflow.com/questions/42671252/python-pillow-valueerror-decompressed-data-too-large
-
-# -------------------------------------------------------------------
-
-from PIL import Image, ImageEnhance, ImageFile
-from PIL.GifImagePlugin import GifImageFile, _accept, _save, _save_all
-
-"""
-class BetterGifImageFile(GifImageFile):
-
-    def load_end(self):
-        ImageFile.ImageFile.load_end(self)
-        self._prev_im = self.im.copy()
-
-Image.register_open(BetterGifImageFile.format, BetterGifImageFile, _accept)
-Image.register_save(BetterGifImageFile.format, _save)
-Image.register_save_all(BetterGifImageFile.format, _save_all)
-Image.register_extension(BetterGifImageFile.format, ".gif")
-Image.register_mime(BetterGifImageFile.format, "image/gif")
-"""
 
 class ThumbError(Exception):
 	pass
-
-
 
 # -------------------------------------------------------------------
 
@@ -78,41 +42,27 @@ def Transform(source, ops):
 
 	if source.format == 'GIF':
 
-		frames = []
-
-		w, h = source.size
-
 		im = source
-		palette = im.getpalette()
-		last_frame = im.convert('RGBA')
-
+		last_frame = None
 		all_frames = []
 		try:
-			im.seek(0)
 			ops = list(ops)
-			for i in range(100000):
+			for i in range(0, 0xffffffff):
+				im.seek(i)
 
-				new_frame = Image.new('RGBA', im.size)
-
-				if im.tile:
-					tag, (x0, y0, x1, y1), offset, extra = im.tile[0]
-
-					if x1 != w or y1 != h:
-						new_frame.paste(last_frame, (0, 0))
-
-				if not im.getpalette() and palette is not None:
-					im.putpalette(palette)
-
-				new_frame.paste(im, (0, 0), im.convert('RGBA'))
+				new_frame = im.convert('RGBA')
+				if last_frame is not None and im.disposal_method == 1:
+					updated = new_frame.crop(im.dispose_extent)
+					last_frame.paste(updated, im.dispose_extent, updated)
+					new_frame = last_frame
+				else:
+					last_frame = new_frame
 
 				for op in ops:
 					new_frame = op(new_frame)
 
-				last_frame = new_frame
-
+				new_frame.duration = im.info.get("duration")
 				all_frames.append(new_frame)
-
-				im.seek(im.tell() + 1)
 
 		except EOFError:
 			pass
@@ -414,7 +364,15 @@ class Operations(object):
 						'version': 'GIF89a'
 					}
 					"""
-					save_params = dict(optimize=self.optimize, save_all=True, append_images=frames[1:], loop=info.get('loop', 0), duration=info.get('duration', 50))
+
+					duration = info.get('duration', 50)
+					save_params = dict(
+						optimize=self.optimize,
+						save_all=True,
+						append_images=frames[1:],
+						loop=info.get('loop', 0),
+						duration=[getattr(i, 'duration', duration) for i in frames]
+					)
 				else:
 					save_params = dict(optimize=self.optimize)
 			elif fmt == 'JPEG':
