@@ -158,11 +158,11 @@ class Operations(object):
 
 			if not self.h:
 				if img_w > self.w:
-					return (self.w, img_h*self.w/img_w)
+					return (self.w, int(img_h*self.w/img_w))
 			else:
 				if img_w > self.w or img_h > self.h:
 					scale = max(float(img_w)/self.w, float(img_h)/self.h)
-					return (img_w//scale, img_h//scale)
+					return (int(img_w//scale), int(img_h//scale))
 
 			return (img_w, img_h)
 
@@ -209,8 +209,10 @@ class Operations(object):
 			return img
 
 		def GetFinalSize(self, img_w, img_h):
-			scale = max(float(img_w)/self.w, float(img_h)/self.h)
-			return (img_w//scale, img_h//scale)
+			if img_w > self.w or img_h > self.h:
+				scale = max(float(img_w)/self.w, float(img_h)/self.h)
+				return (int(img_w//scale), int(img_h//scale))
+			return (img_w, img_h)
 
 
 	class Force(TransformSize):
