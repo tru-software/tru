@@ -140,17 +140,17 @@ class SuccessResponse(Przelewy24):
 		try:
 			lines = iter(content.splitlines())
 			while True:
-				line = lines.next().strip()
+				line = next(lines).strip()
 				if line == 'RESULT':
 					break
 
-			line = lines.next().strip()
+			line = next(lines).strip()
 
 			if line == 'TRUE':
 				return True
 			elif line == 'ERR':
-				error_code = lines.next().strip()
-				message = lines.next().strip()
+				error_code = next(lines).strip()
+				message = next(lines).strip()
 				raise VerifyErrorException(error_code, message)
 		except StopIteration:
 			pass
