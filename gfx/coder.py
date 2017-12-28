@@ -536,10 +536,12 @@ class ImageType(object):
 		return self.Clone(manual_thumb, True)
 
 	def GetNoPictureSize(self):
-		return '{}x{}'.format(*self.GetNoPictureSizeInts())
+		w, h = self.GetNoPictureSizeInts()
+		return '{}x{}'.format(w or 0, h or 0)
 
 	def GetNoPictureWidth(self):
-		return str(self.GetNoPictureSizeInts()[0])
+		w, h = self.GetNoPictureSizeInts()
+		return str(w or 0)
 
 	def GetNoPictureSizeInts(self):
 		if not self.thumb:
