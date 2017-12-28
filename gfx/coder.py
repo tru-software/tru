@@ -538,6 +538,9 @@ class ImageType(object):
 	def GetNoPictureSize(self):
 		return '{}x{}'.format(*self.GetNoPictureSizeInts())
 
+	def GetNoPictureWidth(self):
+		return str(self.GetNoPictureSizeInts()[0])
+
 	def GetNoPictureSizeInts(self):
 		if not self.thumb:
 			return (77, 77)
