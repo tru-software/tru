@@ -116,10 +116,11 @@ class MakoView(IView):
 				tmp_context._with_template = self.__mako_template
 				mako_runtime._populate_self_namespace(tmp_context, self.__mako_template)
 			except Exception as ex:
-				log.error( "Cannot load template: %s (%s) in %s" % (
+				log.error( "Cannot load template: %s (%s) in %s: %s" % (
 					self.__mako_filename,
 					self.__mako_template.module if self.__mako_template else 'file not found',
 					self.__mako_lookup.directories,
+					ex
 				))
 				# print "Cannot load template: %s (%s)" % (self.__mako_filename, self.__mako_template.module if self.__mako_template else 'file not found')
 				raise
@@ -207,7 +208,7 @@ class MakoView(IView):
 		if not filename.startswith(settings.BASE_DIR):
 			raise Exception("Mako-template '%s' is not in project directory: %s" % (filename, settings.BASE_DIR))
 
-		return "%s/tmp/mako/%s.py" % (settings.BASE_DIR, filename[ len(settings.BASE_DIR)+1:])
+		return "%s/mako/%s.py" % (settings.TMP_DIR, filename[len(settings.BASE_DIR)+1:])
 
 	# ----------------------------------------------------------------------------
 
