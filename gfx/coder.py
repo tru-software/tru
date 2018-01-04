@@ -397,15 +397,24 @@ class ImageType(object):
 		format, quality, op_code, color, contrast, brightness = unpack('!BBBbbb', data[0:6])
 
 		# Nowa wersja hash (zlib.adler32)
-		trx = data[:-4]
 		org_hash = unpack('!I', data[-4:])[0]
-		trx_hash = Hash(key + trx + filename)
+		trx_hash = Hash(key + data[:-4] + filename)
+
+		if org_hash != trx_hash:
+			# Tymczasowa wersja dla PY2 i adler32
+			trx_hash = Hash(key + data[:-8] + filename)
 
 		if org_hash != trx_hash:
 			# Hash może być wyliczany z dwóch różnych źródeł: oryginalna nazwa pliku lub zakodowana do url (urlencoded)
 			# Sprawdzane są oba przypadki - któryś może być prawdziwy.
-			trx_hash = Hash(key + trx + '/'.join(map(quote, (i.encode('utf8') for i in filename.decode('utf8').split('/')))).encode('ascii'))
+			trx_hash = Hash(key + data[:-4] + '/'.join(map(quote, (i.encode('utf8') for i in filename.decode('utf8').split('/')))).encode('ascii'))
 
+		if org_hash != trx_hash:
+			# Tymczasowa wersja dla PY2 i adler32
+
+			# Hash może być wyliczany z dwóch różnych źródeł: oryginalna nazwa pliku lub zakodowana do url (urlencoded)
+			# Sprawdzane są oba przypadki - któryś może być prawdziwy.
+			trx_hash = Hash(key + data[:-8] + '/'.join(map(quote, (i.encode('utf8') for i in filename.decode('utf8').split('/')))).encode('ascii'))
 
 		if PY2:
 			# Stara wersja buildin.hash, który stał się niedeterministyczny pomiędzy instancjami python3
