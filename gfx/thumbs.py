@@ -350,7 +350,10 @@ class Operations(object):
 			first_frame = frames[0] if isinstance(frames, list) else frames
 			fmt = self.format or src.format
 
-			if fmt != 'GIF': # or PNG - TODO
+			if fmt not in ('GIF', 'PNG', 'JPEG'):
+				fmt = 'JPEG'
+
+			if fmt != 'GIF': # or APNG - TODO
 				frames = first_frame
 
 			if fmt == 'GIF':
