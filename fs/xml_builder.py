@@ -6,6 +6,11 @@ import xmlwitch
 import gzip
 import time
 
+try:
+	str_u = unicode
+except NameError:
+	str_u = str
+
 class XMLBuilder(xmlwitch.Builder):
 
 	class Abort(Exception):
@@ -24,13 +29,13 @@ class XMLBuilder(xmlwitch.Builder):
 		if ex_type is XMLBuilder.Abort:
 			return False
 
-		data = str(self)
+		data = str_u(self).encode('utf8')
 
-		with open(self.filepath+'.tmp', 'w') as f:
+		with open(self.filepath+'.tmp', 'wb') as f:
 			f.write(data)
 
 		dest_filename = '{}.gz'.format(self.filepath)
-		with gzip.GzipFile(dest_filename + '.tmp', mode='w', compresslevel=9) as output:
+		with gzip.GzipFile(dest_filename + '.tmp', mode='wb', compresslevel=9) as output:
 			output.write(data)
 
 		os.rename(self.filepath+'.tmp', self.filepath)
@@ -46,3 +51,6 @@ class XMLBuilder(xmlwitch.Builder):
 	def UpdateLastModifyTime(self, mtime):
 		if self.mtime is None or self.mtime < mtime:
 			self.mtime = mtime
+
+	def UpdateModifyTime(self, mtime):
+		self.mtime = mtime
