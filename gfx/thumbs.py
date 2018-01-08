@@ -9,6 +9,9 @@ from . import pil_fixes
 import datetime
 import logging
 import functools
+import shutil
+import mimetypes
+import subprocess
 
 from tru.utils.backtrace import GetTraceback
 from tru.fs.utils import TmpFile
@@ -488,7 +491,7 @@ def ImageExternalOpt(image_path):
 		raise ValueError('Cannot opt image ({}): "{}"'.format(process.returncode, image_path))
 
 	if opt_size and opt_size < org_size:
-		os.rename(image, image_path + '.org')
+		os.rename(image_path, image_path + '.org')
 		os.rename(output, image_path)
 		os.remove(image_path + '.org')
 		return (org_size, opt_size)
