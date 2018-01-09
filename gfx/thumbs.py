@@ -146,7 +146,7 @@ class Operations(object):
 
 			if not self.h:
 				if img_w > self.w:
-					img = img.resize((self.w, img_h*self.w/img_w), Image.ANTIALIAS)
+					img = img.resize((self.w, int(img_h*self.w/img_w)), Image.ANTIALIAS)
 			else:
 				if img_w > self.w or img_h > self.h:
 					scale = max(float(img_w)/self.w, float(img_h)/self.h)
@@ -182,13 +182,13 @@ class Operations(object):
 			if img_w > self.w or img_h > self.h:
 
 				if float(img_w)/img_h <= float(self.w)/self.h:
-					img = img.resize((self.w, img_h*self.w//img_w), Image.ANTIALIAS)
+					img = img.resize((self.w, int(img_h*self.w//img_w)), Image.ANTIALIAS)
 					img_w, img_h = img.size
-					img = img.crop(((img_w-self.w)/4, (img_h-self.h)/2, (img_w-self.w)/4+self.w, (img_h-self.h)/2+self.h))
+					img = img.crop((int((img_w-self.w)/4), int((img_h-self.h)/2), int((img_w-self.w)/4+self.w), int((img_h-self.h)/2+self.h)))
 				else:
-					img = img.resize((img_w*self.h//img_h, self.h), Image.ANTIALIAS)
+					img = img.resize(int((img_w*self.h//img_h), self.h), Image.ANTIALIAS)
 					img_w, img_h = img.size
-					img = img.crop(((img_w-self.w)/2, (img_h-self.h)/4, (img_w-self.w)/2+self.w, (img_h-self.h)/4+self.h))
+					img = img.crop((int((img_w-self.w)/2), int((img_h-self.h)/4), int((img_w-self.w)/2+self.w), int((img_h-self.h)/4+self.h)))
 
 			return img
 
