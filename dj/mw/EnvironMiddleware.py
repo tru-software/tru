@@ -63,7 +63,7 @@ def CatchExceptions(func):
 				log.error("\n%s\n" % (GetTraceback()))
 			response = HttpResponseNotFound(__page404.content)
 			response.error_msg = str(ex)
-			return resopnse
+			return response
 
 		except exceptions.PermissionDenied as pd:
 			log.error("%s\nPermissionDenied Exception: %s" % (GetTraceback(), pd.message))
