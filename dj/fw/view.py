@@ -217,20 +217,28 @@ class MakoView(IView):
 class MakoDir(object):
 
 	def __init__(self, module_name):
-		self.module_path = settings.MAKO_TEMPLATE_DIRS + (self.__dir_of_class(module_name), )
+		self.module_path = list(self.__dir_of_class(module_name, settings.MAKO_TEMPLATE_DIRS))
 
 	def MakoView(self, filename):
 		return MakoView(filename, self.module_path)
 
 	@staticmethod
-	def __dir_of_class(module):
+	def __dir_of_class(module, roots):
 
 		test = lambda x: x if os.path.isdir(x) else None
 		if os.path.dirname(module):
 			return module
 
-		return \
-			test(settings.BASE_DIR + '/' + '/'.join(module.split('.'))) or \
-			test(settings.BASE_DIR + '/' + '/'.join(module.split('.')[:-1]))
+		parts = module.split('.')
+
+		for i in roots:
+			yield i
+
+			t = test(i + '/' + '/'.join(parts))
+			if t:
+				yield t
+			t = test(i + '/' + '/'.join(parts[:-1]))
+			if t:
+				yield t
 
 	# ----------------------------------------------------------------------------

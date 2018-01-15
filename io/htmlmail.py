@@ -44,7 +44,7 @@ class MailImageCollector:
 		if image_file_name.startswith(settings.UPLOAD_URL):
 			abs_path = settings.UPLOAD_DIR + image_file_name[len(settings.UPLOAD_URL):]
 		else:
-			abs_path = settings.BASE_DIR + image_file_name
+			abs_path = settings.BASE_DIR_FRONTEND + image_file_name
 
 		if abs_path in self._images:
 			return self._images[abs_path]

@@ -167,11 +167,11 @@ def SendFileResponse(request, path, nocache=False, download=False, tmp=False, ag
 	path = utf8('/' + path.lstrip('/'))
 
 	if settings.DEBUG or tmp:
-		
+
 		if upload_path:
 			response = serve(request, path, document_root=settings.UPLOAD_DIR)
 		elif static_path:
-			response = serve(request, path, document_root=settings.BASE_DIR + '/static')
+			response = serve(request, path, document_root=settings.BASE_DIR_FRONTEND + '/static')
 		else:
 			raise ValueError("Jedna z opcji powinna być wybrana: upload_path, static_path")
 

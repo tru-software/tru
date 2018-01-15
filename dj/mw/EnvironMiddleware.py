@@ -43,7 +43,7 @@ def EnvironMiddleware(get_response):
 from tru.dj.responses import FileInMemory
 
 def __load(filename):
-	return FileInMemory(path=settings.BASE_DIR + '/static/http/' + filename, always_send=True)
+	return FileInMemory(path=settings.BASE_DIR_FRONTEND + '/static/http/' + filename, always_send=True)
 
 __page403 = __load('403.html')  # HttpResponseForbidden
 __page404 = __load('404.html')  # HttpResponseNotFound
