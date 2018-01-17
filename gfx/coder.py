@@ -114,7 +114,7 @@ class ImageType(object):
 			return self.GetFinalSize(w, h)
 
 		def get_size(self):
-			return (self.cx, self.cy)
+			return (self.w, self.h)
 
 		@classmethod
 		def FromParams(cls, params):
