@@ -146,17 +146,19 @@ def int2datetime(date):
 
 	if date is None:
 		return None
-	return datetime.datetime.fromtimestamp( date )
+	return datetime.datetime.fromtimestamp(date)
 
 # ------------------------------------------------------------------------
 
 def strtr(text, dict):
-	return ''.join( ( dict.get(i, i) for i in text ) )
+	if isinstance(text, bytes):
+		text = text.decode('utf8')
+	return u''.join((dict.get(i, i) for i in text))
 
 # -----------------------------------------------------------------------------
 
 def fbdate2date(date_str):
-	return datetime.datetime.fromtimestamp( time.mktime(time.strptime(date_str, '%m/%d/%Y') ) )
+	return datetime.datetime.fromtimestamp(time.mktime(time.strptime(date_str, '%m/%d/%Y')))
 
 # -----------------------------------------------------------------------------
 
@@ -174,27 +176,27 @@ def FormatPrice(price):
 # -----------------------------------------------------------------------------
 
 pl2lat = {
-	'ś' : 's',
-	'ś' : 's',
-	'ą' : 'a',
-	'ę' : 'e',
-	'ć' : 'c',
-	'ź' : 'z',
-	'ż' : 'z',
-	'ó' : 'o',
-	'ł' : 'l',
-	'ę' : 'e',
-	'ń' : 'n',
-	'Ś' : 'S',
-	'Ą' : 'A',
-	'Ę' : 'E',
-	'Ć' : 'C',
-	'Ź' : 'Z',
-	'Ż' : 'Z',
-	'Ó' : 'O',
-	'Ł' : 'L',
-	'Ę' : 'E',
-	'Ń' : 'N'
+	u'ś' : u's',
+	u'ś' : u's',
+	u'ą' : u'a',
+	u'ę' : u'e',
+	u'ć' : u'c',
+	u'ź' : u'z',
+	u'ż' : u'z',
+	u'ó' : u'o',
+	u'ł' : u'l',
+	u'ę' : u'e',
+	u'ń' : u'n',
+	u'Ś' : u'S',
+	u'Ą' : u'A',
+	u'Ę' : u'E',
+	u'Ć' : u'C',
+	u'Ź' : u'Z',
+	u'Ż' : u'Z',
+	u'Ó' : u'O',
+	u'Ł' : u'L',
+	u'Ę' : u'E',
+	u'Ń' : u'N'
 }
 
 # ------------------------------------------------------------------------
@@ -202,7 +204,7 @@ pl2lat = {
 def replace2ascii(text):
 	if not text:
 		return ''
-	return strtr( text, pl2lat )
+	return strtr(text, pl2lat)
 
 # ------------------------------------------------------------------------
 
