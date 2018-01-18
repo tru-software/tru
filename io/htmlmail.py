@@ -154,12 +154,13 @@ def send_html_mail(subject, html_content, text_content, to_, from_=settings.EMAI
 				fileMsg.add_header('Content-Disposition', 'attachment;filename={}'.format(filename or os.path.basename(path)))
 				msgRoot.attach(fileMsg)
 
-	with SMTP(smtp_server, smtp_port) if smtp_ssl is not True else SMTP_SSL(smtp_server, smtp_port) as smtp:
+	smtp = SMTP(smtp_server, smtp_port) if smtp_ssl is not True else SMTP_SSL(smtp_server, smtp_port)
+	smtp.ehlo()
+	if smtp_tls and not smtp_ssl:
+		smtp.starttls()
 		smtp.ehlo()
-		if smtp_tls and not smtp_ssl:
-			smtp.starttls()
-			smtp.ehlo()
-		if smtp_user:
-			smtp.login(smtp_user, smtp_pass)
+	if smtp_user:
+		smtp.login(smtp_user, smtp_pass)
 
-		smtp.sendmail(from_, to_, msgRoot.as_bytes())
+	smtp.sendmail(from_, to_, msgRoot.as_bytes())
+	smtp.quit()
