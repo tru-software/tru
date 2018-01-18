@@ -162,5 +162,6 @@ def send_html_mail(subject, html_content, text_content, to_, from_=settings.EMAI
 	if smtp_user:
 		smtp.login(smtp_user, smtp_pass)
 
-	smtp.sendmail(from_, to_, msgRoot.as_bytes())
+	content = msgRoot.as_bytes() if hasattr(msgRoot, 'as_bytes') else msgRoot.as_string()
+	smtp.sendmail(from_, to_, content)
 	smtp.quit()
