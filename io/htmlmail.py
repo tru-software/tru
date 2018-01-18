@@ -10,12 +10,17 @@ try:
 	from email.mime.text import MIMEText
 	from email.mime.image import MIMEImage
 	import email.charset as Charset
+	from email.header import Header
 except ImportError:
 	# Py2
 	from email.MIMEMultipart import MIMEMultipart
 	from email.MIMEText import MIMEText
 	from email.MIMEImage import MIMEImage
 	from email import Charset
+
+	def Header(txt, encoding):
+		return txt.encode(encoding)
+
 
 from smtplib import SMTP, SMTP_SSL
 
@@ -90,13 +95,13 @@ def send_mail(subject, email, request, env, html_part, text_part='', from_field=
 
 # ----------------------------------------------------------------------------
 
-def send_html_mail(subject,html_content,text_content,to_,from_=settings.EMAIL_DEFAULT_FROM,images=(),reply_to=None,files=None):
+def send_html_mail(subject, html_content, text_content, to_, from_=settings.EMAIL_DEFAULT_FROM, images=(), reply_to=None, files=None):
 	'''
 	if you want to use Django template system:
 		use `msg` and optionally `textmsg` as template context (dict)
 		and define `template` and optionally `texttemplate` variables.
 	otherwise msg and textmsg variables are used as html and text message sources.
-	
+
 	if you want to use images in html message, define physical paths and ids in tuples.
 	(image paths are relative to  MEDIA_ROOT)
 	example: 
@@ -108,14 +113,14 @@ def send_html_mail(subject,html_content,text_content,to_,from_=settings.EMAIL_DE
 	'''
 
 	msgRoot = MIMEMultipart('related')
-	msgRoot['Subject'] = subject
+	msgRoot['Subject'] = Header(subject, 'utf-8')
 	msgRoot['From'] = from_
-	msgRoot['To'] =  to_
+	msgRoot['To'] = to_
 	msgRoot['Date'] = email.utils.formatdate()
 	if reply_to:
-		msgRoot['Reply-To'] =  reply_to
-		msgRoot['Mail-Reply-To'] =  reply_to
-		msgRoot['Mail-Followup-To'] =  reply_to
+		msgRoot['Reply-To'] = reply_to
+		msgRoot['Mail-Reply-To'] = reply_to
+		msgRoot['Mail-Followup-To'] = reply_to
 	msgRoot.preamble = 'This is a multi-part message in MIME format.'
 
 	msgAlternative = MIMEMultipart('alternative')
@@ -128,7 +133,7 @@ def send_html_mail(subject,html_content,text_content,to_,from_=settings.EMAIL_DE
 		html_content = html_content.encode(charset)
 
 	if text_content:
-		msgAlternative.attach(MIMEText(text_content, _charset=charset))
+		msgAlternative.attach(MIMEText(text_content, 'plain', _charset=charset))
 
 	if html_content:
 		msgAlternative.attach(MIMEText(html_content, 'html', _charset=charset))
@@ -146,15 +151,15 @@ def send_html_mail(subject,html_content,text_content,to_,from_=settings.EMAIL_DE
 			with open(path, 'rb') as fp:
 				fileMsg.set_payload(fp.read())
 				email.encoders.encode_base64(fileMsg)
-				fileMsg.add_header('Content-Disposition','attachment;filename={}'.format(filename or os.path.basename(path)))
+				fileMsg.add_header('Content-Disposition', 'attachment;filename={}'.format(filename or os.path.basename(path)))
 				msgRoot.attach(fileMsg)
-	
-	smtp = SMTP(smtp_server, smtp_port) if smtp_ssl is not True else SMTP_SSL(smtp_server, smtp_port)
-	smtp.ehlo()
-	if smtp_tls and not smtp_ssl:
-		smtp.starttls()
+
+	with SMTP(smtp_server, smtp_port) if smtp_ssl is not True else SMTP_SSL(smtp_server, smtp_port) as smtp:
 		smtp.ehlo()
-	if smtp_user:
-		smtp.login(smtp_user, smtp_pass)
-	smtp.sendmail(from_, to_, msgRoot.as_string())
-	smtp.quit()
+		if smtp_tls and not smtp_ssl:
+			smtp.starttls()
+			smtp.ehlo()
+		if smtp_user:
+			smtp.login(smtp_user, smtp_pass)
+
+		smtp.sendmail(from_, to_, msgRoot.as_bytes())
