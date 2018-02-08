@@ -57,14 +57,14 @@ def Transform(source, ops):
 				if last_frame is not None and im.disposal_method == 1:
 					updated = new_frame.crop(im.dispose_extent)
 					last_frame.paste(updated, im.dispose_extent, updated)
-					new_frame = last_frame
+					new_frame = last_frame.copy()
 				else:
 					last_frame = new_frame
 
 				for op in ops:
 					new_frame = op(new_frame)
 
-				new_frame.duration = im.info.get("duration")
+				new_frame.info['duration'] = im.info.get("duration")
 				all_frames.append(new_frame)
 
 		except EOFError:
@@ -379,7 +379,7 @@ class Operations(object):
 						save_all=True,
 						append_images=frames[1:],
 						loop=info.get('loop', 0),
-						duration=[getattr(i, 'duration', duration) for i in frames]
+						duration=[i.info.get('duration', duration) for i in frames]
 					)
 				else:
 					save_params = dict(optimize=self.optimize)
