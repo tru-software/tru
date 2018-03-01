@@ -33,7 +33,7 @@ def Init():
 		for line in file.readlines():
 			option = option_pat.findall(line)
 			if option: #do something for option
-				if data[current_section].has_key(int(option[0][0])):
+				if int(option[0][0]) in data[current_section]:
 					data[current_section][int(option[0][0])].append(option[0][1])
 				else:
 					data[current_section][int(option[0][0])] = [option[0][1],]
@@ -48,23 +48,23 @@ def Init():
 
 	file_name = "%s/data/%s" % ( os.path.dirname(__file__), "uas.ini" )
 	data = _parseIniFile(open(file_name,'rb'))
-	for key, d in data.get('robots', {}).items():
+	for key, d in list(data.get('robots', {}).items()):
 		new_bots[ d[0] ] = key
 
-	log.info( u'Załadowało %s botów' % (len(new_bots)) )
+	log.info( 'Załadowało %s botów' % (len(new_bots)) )
 
 	mobiles = {}
-	for key, d in data.get('browser', {}).items():
+	for key, d in list(data.get('browser', {}).items()):
 		if d[0] == "3":
 			mobiles[ key ] = d[1]
 
 	new_mobiles_re = []
 
-	for key, d in data.get('browser_reg', {}).items():
+	for key, d in list(data.get('browser_reg', {}).items()):
 		if int(d[1]) in mobiles:
 			new_mobiles_re.append( toPythonReg(d[0]) )
 
-	log.info( u'Załadowało %s przeglądarek komórkowych' % (len(new_mobiles_re)) )
+	log.info( 'Załadowało %s przeglądarek komórkowych' % (len(new_mobiles_re)) )
 
 	global bots
 	global mobiles_re

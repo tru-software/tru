@@ -72,7 +72,7 @@ class PaymentForm(Przelewy24):
 			"p24_amount"      : self.price,
 			"p24_currency"    : "PLN",
 			# "p24_description" : "TEST_ERR04",
-			"p24_description" : u"Zakup zdjęć",
+			"p24_description" : "Zakup zdjęć",
 			"p24_email"       : self.email,
 			"p24_country"     : "PL",
 			"p24_url_return"  : self.url_return,
@@ -94,10 +94,10 @@ class SuccessResponse(Przelewy24):
 		# print "Klucz: {}".format( hashlib.md5('|'.join(map(str, (P['p24_session_id'], P['p24_order_id'], P['p24_amount'], P['p24_currency'], self.PRZELEWY24_CRC) )) ).hexdigest() )
 
 		if P['p24_sign'] != self.CRC( P['p24_session_id'], P['p24_order_id'], P['p24_amount'], P['p24_currency']):
-			raise InputDataException( u'Nieprawidłowa suma kontrolna' )
+			raise InputDataException( 'Nieprawidłowa suma kontrolna' )
 
 		if str(P['p24_merchant_id']) != str(self.PRZELEWY24_ID):
-			raise InputDataException( u'Nieprawidłowy identyfikator sprzedawcy {}'.format(P['p24_merchant_id']) )
+			raise InputDataException( 'Nieprawidłowy identyfikator sprzedawcy {}'.format(P['p24_merchant_id']) )
 
 		self.merchant_id = int(P['p24_merchant_id'])
 		self.session_key = P['p24_session_id']
@@ -120,22 +120,22 @@ class SuccessResponse(Przelewy24):
 			"p24_sign"        : self.CRC( self.session_key, self.order_id, payment.price, 'PLN')
 		}
 
-		log.info( u"Payment verification: {}: {}".format( self.PRZELEWY24_URL + '/trnVerify', data)  )
+		log.info( "Payment verification: {}: {}".format( self.PRZELEWY24_URL + '/trnVerify', data)  )
 		try:
 			response = requests.post( self.PRZELEWY24_URL + '/trnVerify', data=data, verify=True )
 		except requests.exceptions.RequestException as ex:
-			log.error( u"Payment verification: connection problem: {}".format(ex))
-			raise VerifyConnectionException( u'Nie można połączyć w celu weryfikacji {}'.format(ex) )
+			log.error( "Payment verification: connection problem: {}".format(ex))
+			raise VerifyConnectionException( 'Nie można połączyć w celu weryfikacji {}'.format(ex) )
 
-		log.info( u"Payment verification: Got response: {}".format(response.status_code))
+		log.info( "Payment verification: Got response: {}".format(response.status_code))
 
 		if response.status_code != 200:
-			log.error( u"Payment verification: invalid response: {}: {}".format(response.status_code, response.content))
-			raise VerifyContentException( u'Nieprawidłowa odpowiedź: {}: {}'.format(response.status_code, response.content) )
+			log.error( "Payment verification: invalid response: {}: {}".format(response.status_code, response.content))
+			raise VerifyContentException( 'Nieprawidłowa odpowiedź: {}: {}'.format(response.status_code, response.content) )
 
 		content = response.text
 
-		log.info( u"Payment verification: checking text: {}".format(repr(content)))
+		log.info( "Payment verification: checking text: {}".format(repr(content)))
 
 		try:
 			lines = iter(content.splitlines())
@@ -155,7 +155,7 @@ class SuccessResponse(Przelewy24):
 		except StopIteration:
 			pass
 
-		raise VerifyContentException( u'Niezrozumiała odpowiedź: {}'.format(repr(content)) )
+		raise VerifyContentException( 'Niezrozumiała odpowiedź: {}'.format(repr(content)) )
 
 	def GetOrderId(self):
 		return self.order_id
@@ -182,7 +182,7 @@ class ErrorResponse(Przelewy24):
 		#	raise InputDataException( 'p24_crc', u'Nieprawidłowa suma kontrolna' )
 
 		if str(P['p24_merchant_id']) != str(self.PRZELEWY24_ID):
-			raise InputDataException( 'p24_crc', u'Nieprawidłowy identyfikator sprzedawcy {}'.format(P['p24_merchant_id']) )
+			raise InputDataException( 'p24_crc', 'Nieprawidłowy identyfikator sprzedawcy {}'.format(P['p24_merchant_id']) )
 
 		self.id_sprzedawcy = int(P['p24_merchant_id'])
 		self.session_key = P['p24_session_id']

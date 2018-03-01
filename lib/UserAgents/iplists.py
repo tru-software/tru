@@ -85,8 +85,8 @@ def ImportDir(data_dir):
 
 	all_ua = sorted(all_ua)
 	
-	log.info(u'iplists: Załadowało %s adresów IP botów' % (sum(map(len,all_ips))))
-	log.info(u'iplists: Załadowało %s User-Agents botów' % (len(all_ua)))
+	log.info('iplists: Załadowało %s adresów IP botów' % (sum(map(len,all_ips))))
+	log.info('iplists: Załadowało %s User-Agents botów' % (len(all_ua)))
 
 	return all_ips, all_ua
 

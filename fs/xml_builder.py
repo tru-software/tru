@@ -7,7 +7,7 @@ import gzip
 import time
 
 try:
-	str_u = unicode
+	str_u = str
 except NameError:
 	str_u = str
 

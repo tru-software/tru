@@ -604,7 +604,7 @@ fc_nfkc_closure = {
 	b"\xF0\x9D\x9F\x8A" : b"\xCF\x9D",
 }
 
-fc_nfkc_closure = {k.decode('utf8'): v.decode('utf8') for k, v in fc_nfkc_closure.items()}
+fc_nfkc_closure = {k.decode('utf8'): v.decode('utf8') for k, v in list(fc_nfkc_closure.items())}
 
 # -----------------------------------------------------------------------------
 

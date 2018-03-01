@@ -199,7 +199,7 @@ def DumpThreads_gevent(sig=None, frame=None):
 		if logfile:
 			logfile.close()
 	except Exception as ex:
-		print(GetTraceback(ex))
+		print((GetTraceback(ex)))
 
 def DumpThreads(sig, frame):
 
@@ -387,7 +387,7 @@ def DumpBigObjects(sig, frame):
 						log.warn("GC: error: {}".format(ex))
 						raise
 	
-#	for k, v in heapq.nlargest(100, types.iteritems(), lambda x: x[1]):
+#	for k, v in heapq.nlargest(100, types.items(), lambda x: x[1]):
 #		log.warn(u"GC: most used type: {}: {}".format(v, k))
 
 # ----------------------------------------------------------------------------

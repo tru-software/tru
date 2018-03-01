@@ -21,7 +21,7 @@ from io import BytesIO
 try:
 	from urllib.parse import urlencode, quote
 except ImportError:
-	from urllib import urlencode, quote
+	from urllib.parse import urlencode, quote
 
 
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseServerError, HttpResponseForbidden, HttpResponseNotModified, StreamingHttpResponse
@@ -160,7 +160,7 @@ window.location.href = %s;
 from django.views.static import serve
 
 def utf8(s):
-	return str(s).encode('utf8')
+	return str(s)
 
 def SendFileResponse(request, path, nocache=False, download=False, tmp=False, age=300, upload_path=False, static_path=False):
 

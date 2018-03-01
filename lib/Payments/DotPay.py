@@ -42,12 +42,12 @@ class DotPay(object):
 		ProcessingRealization = "processing_realization"
 
 		names = {
-			New: u"nowa",
-			Processing: u"przetwarzana",
-			Completed: u"wykonana",
-			Rejected: u"odrzucona",
-			ProcessingRealizationWaiting: u"oczekuje na realizację",
-			ProcessingRealization: u"realizowana",
+			New: "nowa",
+			Processing: "przetwarzana",
+			Completed: "wykonana",
+			Rejected: "odrzucona",
+			ProcessingRealizationWaiting: "oczekuje na realizację",
+			ProcessingRealization: "realizowana",
 		}
 
 	DOTPAY_URL = 'https://ssl.dotpay.pl/t2/'
@@ -141,7 +141,7 @@ class PaymentForm(DotPay):
 			"url"             : self.url_return,
 			"urlc"            : self.url_callback,
 
-			"buttontext"      : u"Powrót do serwisu",
+			"buttontext"      : "Powrót do serwisu",
 			"control"         : self.session_key,
 
 			"firstname"       : self.payment.GetUserData('first'),
@@ -169,20 +169,20 @@ class SuccessResponse(DotPay):
 		if not self.DEBUG:
 			signature = self.CRC(self.pin, P)
 			if P['signature'] != signature:
-				raise InputDataException(u'Nieprawidłowa suma kontrolna "{}" != "{}"'.format(P['signature'], signature))
+				raise InputDataException('Nieprawidłowa suma kontrolna "{}" != "{}"'.format(P['signature'], signature))
 
 		if str(P['id']) != str(self.acconut_id):
-			raise InputDataException(u'Nieprawidłowy identyfikator sprzedawcy {}'.format(P['id']))
+			raise InputDataException('Nieprawidłowy identyfikator sprzedawcy {}'.format(P['id']))
 
 		if P['control'] != self.payment.session_key:
-			raise InputDataException(u'Nieprawidłowy identyfikator sessji "{}" != "{}"'.format(P['control'], self.payment.session_key))
+			raise InputDataException('Nieprawidłowy identyfikator sessji "{}" != "{}"'.format(P['control'], self.payment.session_key))
 
 		# operation_original_amount == "{}.{}".format(int(self.price/100), self.price%100)
 
 		status = P['operation_status']
 
 		if status not in self.Statuses.names:
-			raise InputDataException(u'Nieprawidłowy stan operacji: {}'.format(status))
+			raise InputDataException('Nieprawidłowy stan operacji: {}'.format(status))
 
 		Statuses = DotPay.Statuses
 		if status == Statuses.New:
@@ -223,7 +223,7 @@ class ErrorResponse(DotPay):
 		#	raise InputDataException(u'Nieprawidłowa suma kontrolna' )
 
 		if str(P['p24_merchant_id']) != str(self.DOTPAY_ID):
-			raise InputDataException(u'Nieprawidłowy identyfikator sprzedawcy {}'.format(P['p24_merchant_id']) )
+			raise InputDataException('Nieprawidłowy identyfikator sprzedawcy {}'.format(P['p24_merchant_id']) )
 
 		self.id_sprzedawcy = int(P['p24_merchant_id'])
 		self.session_key = P['p24_session_id']

@@ -412,7 +412,7 @@ class Operations(object):
 
 					try:
 						thumb = iptcinfo3.IPTCInfo(buf_tmp, force=True)
-						for k, v in info.data.items():
+						for k, v in list(info.data.items()):
 							thumb.data[k] = v
 						thumb.saveToBuf(buf)
 						return

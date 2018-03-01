@@ -88,7 +88,7 @@ class MakoView(IView):
 			filesystem_checks   = settings.MAKO_ALWAYS_RELOAD,
 			input_encoding      = 'utf-8',
 			output_encoding     = 'unicode',
-			disable_unicode     = False,
+			#disable_unicode     = False,
 			cache_enabled       = False, # not ( settings.DEBUG or settings.MAKO_ALWAYS_RELOAD ),
 			modulename_callable = MakoView.default_module_name if settings.DEBUG or settings.SERVER_DEV else None,
 			default_filters     = []

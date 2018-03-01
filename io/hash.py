@@ -11,7 +11,7 @@ from . import converters
 # ----------------------------------------------------------------------------
 
 try:
-	_unicode = unicode
+	_unicode = str
 except NameError:
 	_unicode = str
 

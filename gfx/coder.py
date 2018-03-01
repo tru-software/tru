@@ -2,10 +2,10 @@
 
 try:
 	# Py2:
-	import urllib2
-	from urllib import quote
+	import urllib.request, urllib.error, urllib.parse
+	from urllib.parse import quote
 
-	str_or_unicode = unicode
+	str_or_unicode = str
 
 	PY2 = True
 
@@ -14,7 +14,7 @@ except ImportError:
 	import urllib.request, urllib.error, urllib.parse
 	from urllib.parse import quote
 
-	basestring = str
+	str = str
 	str_or_unicode = str
 
 	PY2 = False
@@ -278,6 +278,7 @@ class ImageType(object):
 
 		def _getOpParams(self):
 			c = self.c or (0, 0, 0, 0)
+			c = tuple(map(int, c))
 			return pack('!HHHHHH', min(max(self.w or 0, 0), 0xFFFF), min(max(self.h or 0, 0), 0xFFFF), *c)
 
 		@classmethod
@@ -475,7 +476,6 @@ class ImageType(object):
 		return it
 
 	def Encode(self, filename, key, **kwargs):
-
 		assert isinstance(key, bytes), "Key must be an instance of bytes, got {}".format(repr(key))
 
 		format = 0x01  # Default

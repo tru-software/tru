@@ -153,7 +153,7 @@ def int2datetime(date):
 def strtr(text, dict):
 	if isinstance(text, bytes):
 		text = text.decode('utf8')
-	return u''.join((dict.get(i, i) for i in text))
+	return ''.join((dict.get(i, i) for i in text))
 
 # -----------------------------------------------------------------------------
 
@@ -176,27 +176,27 @@ def FormatPrice(price):
 # -----------------------------------------------------------------------------
 
 pl2lat = {
-	u'ś' : u's',
-	u'ś' : u's',
-	u'ą' : u'a',
-	u'ę' : u'e',
-	u'ć' : u'c',
-	u'ź' : u'z',
-	u'ż' : u'z',
-	u'ó' : u'o',
-	u'ł' : u'l',
-	u'ę' : u'e',
-	u'ń' : u'n',
-	u'Ś' : u'S',
-	u'Ą' : u'A',
-	u'Ę' : u'E',
-	u'Ć' : u'C',
-	u'Ź' : u'Z',
-	u'Ż' : u'Z',
-	u'Ó' : u'O',
-	u'Ł' : u'L',
-	u'Ę' : u'E',
-	u'Ń' : u'N'
+	'ś' : 's',
+	'ś' : 's',
+	'ą' : 'a',
+	'ę' : 'e',
+	'ć' : 'c',
+	'ź' : 'z',
+	'ż' : 'z',
+	'ó' : 'o',
+	'ł' : 'l',
+	'ę' : 'e',
+	'ń' : 'n',
+	'Ś' : 'S',
+	'Ą' : 'A',
+	'Ę' : 'E',
+	'Ć' : 'C',
+	'Ź' : 'Z',
+	'Ż' : 'Z',
+	'Ó' : 'O',
+	'Ł' : 'L',
+	'Ę' : 'E',
+	'Ń' : 'N'
 }
 
 # ------------------------------------------------------------------------
@@ -243,12 +243,12 @@ def dict2str(d):
 def str2dict(s):
 	if not s or s == 'None':
 		return {}
-	try:
-		if s.startswith('{'):
-			return eval(s)
-		return pickle.loads( base64.decodestring(s) )
-	except Exception as ex:
-		log.error( "Nie można zdeserializować wartości: %s\n%s\n\n%s" % (ex, str('\n'.join(traceback.format_exception(*ex)), 'UTF8')), s )
+	# try:
+	if s.startswith('{'):
+		return eval(s)
+	return pickle.loads(base64.decodestring(bytes(s,'UTF8')))
+	#except Exception as ex:
+	#	log.error( "Nie można zdeserializować wartości: %s\n%s\n\n%s" % (ex, str('\n'.join(traceback.format_exception(ex)), 'UTF8')), s )
 	return {}
 
 # -----------------------------------------------------------------------------

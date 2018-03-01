@@ -34,7 +34,7 @@ def Init(data_dir=os.path.join(THIS_DIR, 'data')):
 	uas.sort()
 	all_uas.extend(uas)
 
-	log.info(u'useragentswitcher: Załadowało %s User-Agents smartphonów' % (len(all_uas)))
+	log.info('useragentswitcher: Załadowało %s User-Agents smartphonów' % (len(all_uas)))
 
 	return uas
 

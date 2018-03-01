@@ -13,7 +13,7 @@ try:
 	from urllib.parse import urlencode
 	import urllib.error
 except ImportError:
-	from urllib import urlencode
+	from urllib.parse import urlencode
 
 from mako import filters
 from mako.filters import html_escape

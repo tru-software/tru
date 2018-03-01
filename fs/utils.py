@@ -103,8 +103,8 @@ try:
 	from urllib.parse import urlencode, parse_qs, urlsplit, urlunsplit
 except ImportError:
 	# PY2
-	from urlparse import parse_qs, urlsplit, urlunsplit
-	from urllib import urlencode
+	from urllib.parse import parse_qs, urlsplit, urlunsplit
+	from urllib.parse import urlencode
 
 def UpgradeURL(url, params):
 	"""Given a URL, set or replace a query parameter and return the
@@ -222,8 +222,8 @@ class TmpFile:
 
 def utf8(s):
 	if isinstance(s, bytes):
-		return s
-	return s.encode('utf8')
+		return s.decode()
+	return s
 
 # -------------------------------------------------------------------------------
 
