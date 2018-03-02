@@ -36,18 +36,17 @@ def get_hexdigest(algorithm, salt, raw_password, hsh=None):
 
 # -------------------------------------------------------------------------------
 
-
 def Hash_v1(text):
 
 	if isinstance(text, dict):
-		return Hash('.'.join(("%s=%s;"%(k, Hash(v)) for k, v in sorted(text.items()))))
-	elif isinstance(text, (list, set)):
-		return Hash(tuple(map(Hash, text)))
-	elif isinstance(text, _unicode):
+		return Hash_v1('.'.join(("%s=%s;"%(k, Hash_v1(v)) for k, v in sorted(text.items()))))
+	elif isinstance(text, (list, tuple, set, frozenset)):
+		return Hash_v1(b"\n".join(map(bytes, map(Hash_v1, text))))
+	elif isinstance(text, str):
 		text = text.encode('utf8')
 
 	if not isinstance(text, bytes):
-		text = repr(text)
+		text = repr(text).encode('utf8')
 
 	# adler32 is week!
 	# see: https://www.leviathansecurity.com/blog/analysis-of-adler32
@@ -66,23 +65,30 @@ def _extract(text):
 			yield from _extract(t)
 			yield b"\n"
 	elif isinstance(text, str):
-		yield text.encode()
+		yield text.encode('utf8')
 	elif isinstance(text, bytes):
 		yield text
 	else:
-		yield repr(text).encode()
+		yield repr(text).encode('utf8')
 	yield b"\n"
 
 
 def Hash_v2(text):
 	m = md5()
-	for i in _extract(text):
-		m.update(i)
+
+	if isinstance(text, str):
+		m.update(text.encode())
+	elif isinstance(text, bytes):
+		m.update(text)
+	else:
+		for i in _extract(text):
+			m.update(i)
 	return int(m.hexdigest(), 16)
 
 
 Hash = Hash_v2
 Hash32 = Hash_v1
+
 
 def Distribution(text, options):
 	return Hash(text) % options
