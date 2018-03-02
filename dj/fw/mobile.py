@@ -19,9 +19,6 @@ class MobileInterface(object):
 	def __str__(self):
 		return 'MobileInterface %s %s' % (self.__class__, id(self))
 
-	def __unicode__(self):
-		return str(self)
-
 # -------------------------------------------------------------------------------------------
 
 class MobileAPI(object):
@@ -67,8 +64,5 @@ class MobileAPI(object):
 
 	def __str__(self):
 		return 'MobileAPI %s' % (self.version)
-
-	def __unicode__(self):
-		return str(self)
 
 # -------------------------------------------------------------------------------------------

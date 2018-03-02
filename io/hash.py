@@ -62,7 +62,8 @@ def _extract(text):
 			yield from _extract(v)
 			yield b"\n"
 	elif isinstance(text, (list, tuple, set, frozenset)):
-		yield from map(_extract, text)
+		for t in text:
+			yield from _extract(t)
 	elif isinstance(text, str):
 		yield text.encode()
 

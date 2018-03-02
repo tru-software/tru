@@ -66,7 +66,7 @@ class ImageType(object):
 		def get_params(self, d):
 			d['thumb_type'] = 'Org'
 
-		def __unicode__(self):
+		def __str__(self):
 			return 'Bez zmian'
 
 		def get_size(self):
@@ -104,7 +104,7 @@ class ImageType(object):
 		def FromParams(cls, params):
 			return cls(params['width'])
 
-		def __unicode__(self):
+		def __str__(self):
 			if self.cy:
 				return 'Do wielkości max: %sx%s' % (self.w, self.h)
 			return 'Do szerokości: %s' % (self.w)
@@ -169,7 +169,7 @@ class ImageType(object):
 
 			return ImageType.Manual(w, h, crop)
 
-		def __unicode__(self):
+		def __str__(self):
 			return 'Wyrównanie do: %sx%s' % (self.w, self.h)
 
 		@classmethod
@@ -198,7 +198,7 @@ class ImageType(object):
 		def get_size(self):
 			return (self.w, self.h)
 
-		def __unicode__(self):
+		def __str__(self):
 			return 'Dokładnie: %sx%s' % (self.w, self.h)
 
 		@classmethod
@@ -227,7 +227,7 @@ class ImageType(object):
 		def get_size(self):
 			return (self.w, self.h)
 
-		def __unicode__(self):
+		def __str__(self):
 			return 'Całość do max: %sx%s' % (self.w, self.h)
 
 		@classmethod
@@ -270,7 +270,7 @@ class ImageType(object):
 			params = unpack('!HHHHHH', data[:12])
 			return cls(params[0], params[1], params[2:])
 
-		def __unicode__(self):
+		def __str__(self):
 			return 'Manualnie: {}x{} + crop {}'.format(self.w, self.h, self.c)
 
 		@classmethod
@@ -531,7 +531,7 @@ class ImageType(object):
 			return (77, 77)
 		return self.thumb.GetNoPictureSizeInts()
 
-	def __unicode__(self):
+	def __str__(self):
 		return 'ImageType.{}({}, {})'.format(self.thumb.__class__.__name__, self.id, self.get_params())
 
 # -------------------------------------------------------------------------------------------

@@ -11,7 +11,7 @@ class WebException(Exception):
 		self.help = help
 		super(WebException, self).__init__(msg)
 
-#	def __unicode__(self):
+#	def __str__(self):
 #		return self.message
 
 	def serialize(self):
