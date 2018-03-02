@@ -4,10 +4,10 @@ import logging
 
 log = logging.getLogger(__name__)
 
-import iplists
-import useragentswitcher
-import user_agent_string
-import detectmobilebrowsers
+from . import iplists
+from . import useragentswitcher
+from . import user_agent_string
+from . import detectmobilebrowsers
 
 def Init():
 	user_agent_string.Init()

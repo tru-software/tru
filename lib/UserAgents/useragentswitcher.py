@@ -10,7 +10,7 @@ import os
 import logging
 import array
 import xml.etree.ElementTree as ET
-from iplists import index
+from .iplists import index
 
 log = logging.getLogger('UserAgents')
 

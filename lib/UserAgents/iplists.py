@@ -9,7 +9,7 @@ import logging
 
 from netaddr import *
 
-import user_agents
+from . import user_agents
 
 log = logging.getLogger('UserAgents')
 
