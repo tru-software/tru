@@ -64,13 +64,13 @@ def _extract(text):
 	elif isinstance(text, (list, tuple, set, frozenset)):
 		for t in text:
 			yield from _extract(t)
+			yield b"\n"
 	elif isinstance(text, str):
 		yield text.encode()
-
-	if not isinstance(text, bytes):
-		yield repr(text).encode()
-	else:
+	elif isinstance(text, bytes):
 		yield text
+	else:
+		yield repr(text).encode()
 	yield b"\n"
 
 
