@@ -6,14 +6,11 @@ import hashlib
 import string
 import zlib
 
+from hashlib import md5
+
 from . import converters
 
 # ----------------------------------------------------------------------------
-
-try:
-	_unicode = str
-except NameError:
-	_unicode = str
 
 md5_constructor, sha_constructor = hashlib.md5, hashlib.sha1
 
@@ -33,14 +30,14 @@ def get_hexdigest(algorithm, salt, raw_password, hsh=None):
 		return sha_constructor(salt + raw_password).hexdigest()
 #	elif algorithm == '' and (salt == 'H' or salt == 'P'):
 #		return phpass.crypt_private(raw_password.encode('utf-8'), hsh, hash_prefix="$%s$" % (salt) )
-	log.error( 'Niepoprawny algorytm haszujący: %s' % (algorithm) )
+	log.error('Niepoprawny algorytm haszujący: %s' % (algorithm))
 	return None
 	# raise ValueError("Got unknown password algorithm type in password.")
 
 # -------------------------------------------------------------------------------
 
 
-def Hash(text):
+def Hash_v1(text):
 
 	if isinstance(text, dict):
 		return Hash('.'.join(("%s=%s;"%(k, Hash(v)) for k, v in sorted(text.items()))))
@@ -52,8 +49,39 @@ def Hash(text):
 	if not isinstance(text, bytes):
 		text = repr(text)
 
+	# adler32 is week!
+	# see: https://www.leviathansecurity.com/blog/analysis-of-adler32
 	return zlib.adler32(text) & 0xFFFFFFFF
 
+
+def _extract(text):
+
+	if isinstance(text, dict):
+		for k, v in sorted(text.items()):
+			yield from _extract(k)
+			yield from _extract(v)
+			yield b"\n"
+	elif isinstance(text, (list, tuple, set, frozenset)):
+		yield from map(_extract, text)
+	elif isinstance(text, str):
+		yield text.encode()
+
+	if not isinstance(text, bytes):
+		yield repr(text).encode()
+	else:
+		yield text
+	yield b"\n"
+
+
+def Hash_v2(text):
+	m = md5()
+	for i in _extract(text):
+		m.update(i)
+	return int(m.hexdigest(), 16)
+
+
+Hash = Hash_v2
+Hash32 = Hash_v1
 
 def Distribution(text, options):
 	return Hash(text) % options

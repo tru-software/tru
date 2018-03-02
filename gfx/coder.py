@@ -1,34 +1,18 @@
 # -*- coding: utf-8 -*-
 
-try:
-	# Py2:
-	import urllib.request, urllib.error, urllib.parse
-	from urllib.parse import quote
-
-	str_or_unicode = str
-
-	PY2 = True
-
-except ImportError:
-	# Py3:
-	import urllib.request, urllib.error, urllib.parse
-	from urllib.parse import quote
-
-	str = str
-	str_or_unicode = str
-
-	PY2 = False
-
 import re
-import os, os.path
+import os
 import copy
 import zlib
 import collections
 from struct import pack, unpack
 from base64 import urlsafe_b64decode, urlsafe_b64encode
 
+import urllib.request, urllib.error, urllib.parse
+from urllib.parse import quote
+
 from tru.fs.utils import path_replace_ext
-from tru.io.hash import Hash, Distribution, EncodeHash, DecodeHash
+from tru.io.hash import Hash, Hash_v1, Distribution, EncodeHash, DecodeHash
 from .thumbs import Operations
 
 
@@ -392,8 +376,8 @@ class ImageType(object):
 		if not ImageType.url_fmt_re.match(data):
 			raise ValueError('Invalid fmt data: {}'.format(data))
 
-		filename = filename.encode('utf8') if isinstance(filename, str_or_unicode) else filename
-		data = urlsafe_b64decode(data.encode('ascii') if isinstance(data, str_or_unicode) else data)
+		filename = filename.encode('utf8') if isinstance(filename, str) else filename
+		data = urlsafe_b64decode(data.encode('ascii') if isinstance(data, str) else data)
 
 		format, quality, op_code, color, contrast, brightness = unpack('!BBBbbb', data[0:6])
 
@@ -401,20 +385,20 @@ class ImageType(object):
 		trx = data[:-4]
 		org_hash = unpack('!I', data[-4:])[0]
 		org_hash_34bit = org_hash
-		trx_hash = Hash(key + trx + filename)
+		trx_hash = Hash(key + trx + filename) & 0xFFFFFFFF
 
 		if org_hash != trx_hash:
 			# Tymczasowa wersja dla PY2 i adler32
 			trx = data[:-8]
 			org_hash = unpack('!q', data[-8:])[0]
 			org_hash_64bit = org_hash
-			trx_hash = Hash(key + trx + filename)
+			trx_hash = Hash_v1(key + trx + filename)
 
 		if org_hash != trx_hash:
 			# Hash może być wyliczany z dwóch różnych źródeł: oryginalna nazwa pliku lub zakodowana do url (urlencoded)
 			# Sprawdzane są oba przypadki - któryś może być prawdziwy.
 			trx = data[:-4]
-			trx_hash = Hash(key + trx + '/'.join(map(quote, (i.encode('utf8') for i in filename.decode('utf8').split('/')))).encode('ascii'))
+			trx_hash = Hash(key + trx + '/'.join(map(quote, (i.encode('utf8') for i in filename.decode('utf8').split('/')))).encode('ascii')) & 0xFFFFFFFF
 			org_hash = org_hash_34bit
 
 		if org_hash != trx_hash:
@@ -423,28 +407,8 @@ class ImageType(object):
 			# Hash może być wyliczany z dwóch różnych źródeł: oryginalna nazwa pliku lub zakodowana do url (urlencoded)
 			# Sprawdzane są oba przypadki - któryś może być prawdziwy.
 			trx = data[:-8]
-			trx_hash = Hash(key + trx + '/'.join(map(quote, (i.encode('utf8') for i in filename.decode('utf8').split('/')))).encode('ascii'))
+			trx_hash = Hash_v1(key + trx + '/'.join(map(quote, (i.encode('utf8') for i in filename.decode('utf8').split('/')))).encode('ascii'))
 			org_hash = org_hash_64bit
-
-		if PY2:
-			# Stara wersja buildin.hash, który stał się niedeterministyczny pomiędzy instancjami python3
-			# https://docs.python.org/3/reference/datamodel.html#object.__hash__
-			# Note By default, the __hash__() values of str, bytes and datetime objects are “salted” with an unpredictable random value. 
-			# Although they remain constant within an individual Python process, they are not predictable between repeated invocations of Python.
-			# This is intended to provide protection against a denial-of-service caused by carefully-chosen inputs that exploit the worst case performance of a dict insertion, O(n^2) complexity.
-			# See http://www.ocert.org/advisories/ocert-2011-003.html for details.
-			# Changing hash values affects the iteration order of dicts, sets and other mappings. Python has never made guarantees about this ordering (and it typically varies between 32-bit and 64-bit builds).
-
-			if org_hash != trx_hash:
-				trx = data[:-8]
-				org_hash = unpack('!q', data[-8:])[0]
-				trx_hash = hash(key + trx + filename)
-
-			if org_hash != trx_hash:
-				# Hash może być wyliczany z dwóch różnych źródeł: oryginalna nazwa pliku lub zakodowana do url (urlencoded)
-				# Sprawdzane są oba przypadki - któryś może być prawdziwy.
-				trx = data[:-8]
-				trx_hash = hash(key + trx + '/'.join(map(quote, (i.encode('utf8') for i in filename.decode('utf8').split('/')))))
 
 		if org_hash != trx_hash:
 			raise ValueError('Invalid checksum {} != {}'.format(org_hash, trx_hash))
@@ -509,7 +473,7 @@ class ImageType(object):
 		if ((len(trx)+4) % 3):
 			trx += pack('!B', 0) * (3-((len(trx)+4) % 3))
 
-		trx_hash = Hash(key + trx + filename.encode('utf8'))
+		trx_hash = Hash(key + trx + filename.encode('utf8')) & 0xFFFFFFFF
 		return urlsafe_b64encode(trx + pack('!I', trx_hash)).decode('ascii')
 
 	def Clone(self, thumb=None, is_custom=None):
