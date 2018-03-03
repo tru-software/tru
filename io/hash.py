@@ -5,8 +5,8 @@ import datetime
 import hashlib
 import string
 import zlib
-
 from hashlib import md5
+import types
 
 from . import converters
 
@@ -60,6 +60,10 @@ def _extract(text):
 			yield from _extract(k)
 			yield from _extract(v)
 			yield b"\n"
+	elif isinstance(text, types.GeneratorType):
+		for t in text:
+			yield from _extract(t)
+			yield b"\n"
 	elif isinstance(text, (list, tuple, set, frozenset)):
 		for t in text:
 			yield from _extract(t)
@@ -77,7 +81,7 @@ def Hash_v2(text):
 	m = md5()
 
 	if isinstance(text, str):
-		m.update(text.encode())
+		m.update(text.encode('utf8'))
 	elif isinstance(text, bytes):
 		m.update(text)
 	else:
