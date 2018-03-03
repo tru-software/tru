@@ -46,8 +46,6 @@ def GetCookiePrefix(request):
 
 class LazyIsBot(object):
 
-	__slots__ = tuple()
-
 	## TODO: .IsBot jest wywoływany dla każdego requestu (ze względu na access log)
 	## mino, że to nie jest potrzebne.
 
@@ -66,8 +64,6 @@ class LazyIsBot(object):
 
 
 class LazyIsMobileBrowser(object):
-
-	__slots__ = tuple()
 
 	def __get__(self, request, obj_type=None):
 		if not hasattr(request, '_cached_ismobilebrowser'):

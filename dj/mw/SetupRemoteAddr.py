@@ -1,6 +1,45 @@
 # -*- coding: utf-8 -*-
 
+import re
 import settings
+import logging
+
+from tru.utils.backtrace import GetTraceback
+
+log = logging.getLogger(__name__)
+
+
+proper_IPv4 = re.compile(r'^[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*$')
+proper_IPv6 = re.compile(r"""
+        ^
+        \s*                         # Leading whitespace
+        (?!.*::.*::)                # Only a single whildcard allowed
+        (?:(?!:)|:(?=:))            # Colon iff it would be part of a wildcard
+        (?:                         # Repeat 6 times:
+            [0-9a-f]{0,4}           #   A group of at most four hexadecimal digits
+            (?:(?<=::)|(?<!::):)    #   Colon unless preceeded by wildcard
+        ){6}                        #
+        (?:                         # Either
+            [0-9a-f]{0,4}           #   Another group
+            (?:(?<=::)|(?<!::):)    #   Colon unless preceeded by wildcard
+            [0-9a-f]{0,4}           #   Last group
+            (?: (?<=::)             #   Colon iff preceeded by exacly one colon
+             |  (?<!:)              #
+             |  (?<=:) (?<!::) :    #
+             )                      # OR
+         |                          #   A v4 address with NO leading zeros 
+            (?:25[0-4]|2[0-4]\d|1\d\d|[1-9]?\d)
+            (?: \.
+                (?:25[0-4]|2[0-4]\d|1\d\d|[1-9]?\d)
+            ){3}
+        )
+        \s*                         # Trailing whitespace
+        $""", re.VERBOSE | re.IGNORECASE | re.DOTALL)
+
+
+import re
+from django.http import HttpResponseNotFound
+
 
 def SetupRemoteAddr(get_response):
 	"""
@@ -16,13 +55,15 @@ def SetupRemoteAddr(get_response):
 	trust the value of HTTP_X_FORWARDED_FOR.
 	"""
 
-	INTERNAL_ADDRS = getattr(settings, 'INTERNAL_ADDRS', [])
+	INTERNAL_ADDRS = list(map(re.compile, getattr(settings, 'INTERNAL_ADDRS', [])))
 
 	def middleware(request):
 
 		request.IsBot = False
 
 		# request.META['REMOTE_ADDR'] = "2601:582:4003:ea10:c97d:259f:ec7e:604a"
+
+		# Obsługa HaProxy lub/i nginx:
 
 		# HTTP_X_FORWARDED_FOR can be a comma-separated list of IPs. The
 		# client's IP will be the first one.
@@ -36,6 +77,16 @@ def SetupRemoteAddr(get_response):
 
 		if 'HTTP_USER_AGENT' not in request.META:
 			request._broken_remote_addr = True
+
+
+		remote_addr = request.META['REMOTE_ADDR']
+		if remote_addr == 'unknown' or not proper_IPv4.match(remote_addr):
+			if not proper_IPv6.match(remote_addr):
+				# FIXME: Http404 → HTTP400 - bad request
+				return HttpResponseNotFound("Błędy REMOTE_ADDR='%s' z HTTP_X_FORWARDED_FOR='%s' dla %s '%s'" % (remote_addr, request.META.get('HTTP_X_FORWARDED_FOR', ''), request.environ['REQUEST_METHOD'], request.full_url))
+			else:
+				log.warn('Unsupported ipv6 adrress "{}" for "{}" ({})'.format(remote_addr, request.full_url, request.environ['REQUEST_METHOD']))
+
 
 		for i in INTERNAL_ADDRS:
 			if i.match(request.META['REMOTE_ADDR']):

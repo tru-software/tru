@@ -47,7 +47,7 @@ def Init():
 	new_bots = {}
 
 	file_name = "%s/data/%s" % ( os.path.dirname(__file__), "uas.ini" )
-	data = _parseIniFile(open(file_name,'rb'))
+	data = _parseIniFile(open(file_name, 'r'))
 	for key, d in list(data.get('robots', {}).items()):
 		new_bots[ d[0] ] = key
 
@@ -62,9 +62,9 @@ def Init():
 
 	for key, d in list(data.get('browser_reg', {}).items()):
 		if int(d[1]) in mobiles:
-			new_mobiles_re.append( toPythonReg(d[0]) )
+			new_mobiles_re.append(toPythonReg(d[0]))
 
-	log.info( 'Załadowało %s przeglądarek komórkowych' % (len(new_mobiles_re)) )
+	log.info('Załadowało %s przeglądarek komórkowych' % (len(new_mobiles_re)))
 
 	global bots
 	global mobiles_re

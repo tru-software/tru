@@ -23,9 +23,10 @@ try:
 except ImportError:
 	from urllib.parse import urlencode, quote
 
-
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseServerError, HttpResponseForbidden, HttpResponseNotModified, StreamingHttpResponse
 from django.utils.http import http_date
+
+from tru.utils.backtrace import GetTraceback
 
 # ----------------------------------------------------------------------------
 
@@ -67,10 +68,11 @@ class NoCacheHttpResponse(HttpResponse):
 #		if last_modify:
 #			self[ 'Last-Modified' ] = str( last_modify )
 		if etag is not None:
-			self[ 'ETag' ] = etag
+			self['ETag'] = etag
 
-		self[ 'Cache-Control' ] = 'must-revalidate'
-		self[ 'Pragma'        ] = 'no-cache'
+		# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
+		self['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+		self['Pragma'] = 'no-cache'
 
 #		self[ 'Expires'       ] = 'Mon, 26 Jul 2007 05:00:00 GMT'
 #		self[ 'Last-Modified' ] = 'Mon, 26 Jul 2030 05:00:00 GMT' # datetime.strftime( 'D, d M Y H:i:s' ) + ' GMT'

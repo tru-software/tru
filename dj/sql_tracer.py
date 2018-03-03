@@ -54,11 +54,11 @@ class CursorDebugWrapperWithBacktrace(CursorWrapper):
 						print("")
 				else:
 					#sql = self.db.ops.last_executed_query(self.cursor, sql, params)
-					if not hasattr(self.db, '_wre_queries_log'):
-						self.db._wre_queries_log = []
+					if not hasattr(self.db, '_queries_log'):
+						self.db._queries_log = []
 
 					sql = self.cursor.query
-					self.db._wre_queries_log.append({
+					self.db._queries_log.append({
 						'sql': sql,
 						'time': "%.3f" % (stop - start),
 						'bt': self.bt(),
@@ -92,10 +92,10 @@ class CursorDebugWrapperWithBacktrace(CursorWrapper):
 						print((''.join(self.bt())))
 						print("")
 				else:
-					if not hasattr(self.db, '_wre_queries_log'):
-						self.db._wre_queries_log = []
+					if not hasattr(self.db, '_queries_log'):
+						self.db._queries_log = []
 
-					self.db.db._wre_queries_log.append({
+					self.db.db._queries_log.append({
 						'sql': '%s times: %s' % (len(param_list), sql),
 						'time': "%.3f" % (stop - start),
 						'bt': self.bt(),
@@ -103,14 +103,8 @@ class CursorDebugWrapperWithBacktrace(CursorWrapper):
 					})
 
 	def bt(self):
-		b = list(traceback.format_stack())[:-2]
-		r = []
-		for i in b:
-			if r:
-				r.append(i)
-			elif 'wre/lib/middleware/' in i:
-				r.append(i)
-		return r or b
+		return list(traceback.format_stack())
+
 
 def install(print_on_console, mgr):
 
