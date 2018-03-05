@@ -5,6 +5,8 @@ import settings
 import resource
 import time
 
+from .CatchExceptions import CatchExceptions
+
 
 class StatsMiddleware:
 
@@ -21,6 +23,7 @@ class StatsMiddleware:
 		self.get_response = get_response
 		self.log = self.external_log or logging.getLogger(__name__)
 
+	@CatchExceptions
 	def __call__(self, request):
 
 		proces_begin = time.time()

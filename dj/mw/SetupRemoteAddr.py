@@ -4,10 +4,13 @@ import re
 import settings
 import logging
 
-from tru.utils.backtrace import GetTraceback
+from django.http import HttpResponseNotFound
+
+from ...utils.backtrace import GetTraceback
+from .CatchExceptions import CatchExceptions
+
 
 log = logging.getLogger(__name__)
-
 
 proper_IPv4 = re.compile(r'^[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*$')
 proper_IPv6 = re.compile(r"""
@@ -37,10 +40,6 @@ proper_IPv6 = re.compile(r"""
         $""", re.VERBOSE | re.IGNORECASE | re.DOTALL)
 
 
-import re
-from django.http import HttpResponseNotFound
-
-
 def SetupRemoteAddr(get_response):
 	"""
 	Middleware that sets REMOTE_ADDR based on HTTP_X_FORWARDED_FOR, if the
@@ -57,6 +56,7 @@ def SetupRemoteAddr(get_response):
 
 	INTERNAL_ADDRS = list(map(re.compile, getattr(settings, 'INTERNAL_ADDRS', [])))
 
+	@CatchExceptions
 	def middleware(request):
 
 		request.IsBot = False

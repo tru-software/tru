@@ -5,7 +5,7 @@ import logging
 import settings
 import json
 
-from .EnvironMiddleware import CatchExceptions
+from .CatchExceptions import CatchExceptions
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound, HttpResponseServerError, HttpResponseServerError, Http404
 

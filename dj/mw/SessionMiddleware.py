@@ -14,7 +14,7 @@ from django.contrib.sessions.backends.base import SessionBase, CreateError, VALI
 from django.core.exceptions import SuspiciousOperation, ObjectDoesNotExist
 
 from tru.utils.backtrace import GetTraceback
-from .EnvironMiddleware import CatchExceptions
+from .CatchExceptions import CatchExceptions
 
 
 import datamodel

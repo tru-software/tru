@@ -9,6 +9,7 @@ from django.http import HttpRequest, HttpResponseBadRequest
 
 from ...lib import UserAgents
 from ...utils.backtrace import GetTraceback
+from .CatchExceptions import CatchExceptions
 
 
 class CheckOriginProtection:
@@ -35,6 +36,7 @@ class CheckOriginProtection:
 
 		return url.hostname and self.IsDomainRegistred(url.hostname)
 
+	#@CatchExceptions
 	def __call__(self, request):
 
 		if request.method in ('POST', 'DELETE', 'PUT'):

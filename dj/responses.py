@@ -16,19 +16,20 @@ import json
 import hashlib
 import base64
 import copy
+import json
 from io import BytesIO
 
-try:
-	from urllib.parse import urlencode, quote
-except ImportError:
-	from urllib.parse import urlencode, quote
+from urllib.parse import urlencode, quote
 
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseServerError, HttpResponseForbidden, HttpResponseNotModified, StreamingHttpResponse
 from django.utils.http import http_date
+from django.views.static import was_modified_since, serve
 
-from tru.utils.backtrace import GetTraceback
+from ..utils.backtrace import GetTraceback
 
-# ----------------------------------------------------------------------------
+
+__all__ = ['ImageResponse', 'NoCacheHttpResponse', 'ResponseJsonSuccess', 'FileInMemory', 'RobotsTxtFactory', 'SendFileResponse', 'RedirectWithJavaScriptResponse']
+
 
 class ImageResponse(StreamingHttpResponse):
 
@@ -57,7 +58,6 @@ class ImageResponse(StreamingHttpResponse):
 			self[ 'Cache-Control' ] = 'must-revalidate'
 			self[ 'Pragma'        ] = 'no-cache'
 
-# ----------------------------------------------------------------------------
 
 class NoCacheHttpResponse(HttpResponse):
 	# http://en.wikipedia.org/wiki/List_of_HTTP_headers
@@ -78,19 +78,20 @@ class NoCacheHttpResponse(HttpResponse):
 #		self[ 'Last-Modified' ] = 'Mon, 26 Jul 2030 05:00:00 GMT' # datetime.strftime( 'D, d M Y H:i:s' ) + ' GMT'
 #		self[ 'Cache-Control' ] = 'post-check=0, pre-check=0'
 
-# ----------------------------------------------------------------------------
 
-from django.views.static import was_modified_since
+__success = json.dumps({'success': True}).encode('utf8')
+def ResponseJsonSuccess():
+	return NoCacheHttpResponse(__success, content_type="application/json")
 
-class FileInMemory(object):
+
+class FileInMemory:
 
 	content = ''
 	last_modifcation = None
 	mimetype = ''
 
-	# ----------------------------------------------------------------------------
 
-	def __init__(self, path, binary=False, always_send=False, reload=False):
+	def __init__(self, path, binary=False, always_send=False, reload=False, status_code=200):
 		self.path = path
 		self.reload = reload
 		self.binary = binary
@@ -100,10 +101,10 @@ class FileInMemory(object):
 		self.always_send=always_send
 		self.crc = None
 		self.content = None
+		self.status_code = status_code
 
 		self.Load()
 
-	# ----------------------------------------------------------------------------
 
 	def Load(self):
 		if self.binary:
@@ -117,9 +118,8 @@ class FileInMemory(object):
 		md5.update(self.content)
 		self.crc = base64.urlsafe_b64encode(md5.digest()).decode('ascii').rstrip('=').replace('-', '')
 
-	# ----------------------------------------------------------------------------
 
-	def Response(self, request):
+	def Response(self, request, status_code=None):
 
 		statobj = self.last_modifcation
 		if self.reload is True:
@@ -131,18 +131,16 @@ class FileInMemory(object):
 			except:
 				pass
 
-		response = HttpResponse(self.content, content_type=self.mimetype)
+		response = HttpResponse(self.content, status_code=status_code or self.status_code, content_type=self.mimetype)
 		response["Last-Modified"] = self.http_date
 		response["Content-Length"] = len(self.content)
 		response["ETag"] = self.GetCRC()
 		return response
 
-	# ----------------------------------------------------------------------------
 
 	def GetCRC(self):
 		return self.crc
 
-# ----------------------------------------------------------------------------
 
 class RedirectWithJavaScriptResponse(HttpResponse):
 
@@ -157,16 +155,10 @@ window.location.href = %s;
 
 		super(RedirectWithJavaScriptResponse, self).__init__( code )
 
-	# ----------------------------------------------------------------------------
-
-from django.views.static import serve
-
-def utf8(s):
-	return str(s)
 
 def SendFileResponse(request, path, nocache=False, download=False, tmp=False, age=300, upload_path=False, static_path=False):
 
-	path = utf8('/' + path.lstrip('/'))
+	path = '/' + path.lstrip('/')
 
 	if settings.DEBUG or tmp:
 
@@ -189,7 +181,7 @@ def SendFileResponse(request, path, nocache=False, download=False, tmp=False, ag
 
 		if tmp:
 			if upload_path:
-				tmp_file = utf8(settings.UPLOAD_DIR + path)
+				tmp_file = settings.UPLOAD_DIR + path
 				log.warn("Removing temporary file: {} for {}".format(tmp_file, request.full_url))
 				# TODO: Delayed removing files (via celery)
 				os.remove( tmp_file )
@@ -224,9 +216,8 @@ def SendFileResponse(request, path, nocache=False, download=False, tmp=False, ag
 
 		return response
 
-# ----------------------------------------------------------------------------
 
-class RobotsTxtFactory(object):
+class RobotsTxtFactory:
 	content = ''
 
 	def _merge(self, lines):
@@ -246,15 +237,11 @@ class RobotsTxtFactory(object):
 		return HttpResponse(self.content, content_type='text/plain')
 
 	def Freeze(self):
-		x = Freeze()
+		x = FrozenRobotsTxt()
 		x.content = self.content
 		return x
 
-# ----------------------------------------------------------------------------
 
-class Freeze(RobotsTxtFactory):
+class FrozenRobotsTxt(RobotsTxtFactory):
 	def _merge(self, lines):
 		return self
-
-# ----------------------------------------------------------------------------
-
