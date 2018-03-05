@@ -19,7 +19,7 @@ from ..WebExceptions import TooLongRequestException, WebException
 from ...utils.backtrace import GetTraceback
 
 log = logging.getLogger(__name__)
-
+log_res = logging.getLogger('Resources')
 
 class CatchExceptions:
 
