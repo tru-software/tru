@@ -30,19 +30,19 @@ class CatchExceptions:
 	def __init__(self, func):
 		self.func = func
 
-		self._page403 = self._load('403.html', status_code=403)  # HttpResponseForbidden
-		self._page404 = self._load('404.html', status_code=404)  # HttpResponseNotFound
-		self._page500 = self._load('500.html', status_code=500)  # HttpResponseServerError
-		self._page502 = self._load('502.html', status_code=502)  # HttpResponseServerError
+		self._page403 = self._load('403.html', status=403)  # HttpResponseForbidden
+		self._page404 = self._load('404.html', status=404)  # HttpResponseNotFound
+		self._page500 = self._load('500.html', status=500)  # HttpResponseServerError
+		self._page502 = self._load('502.html', status=502)  # HttpResponseServerError
 
 
-	def _load(self, filename, status_code):
+	def _load(self, filename, status):
 
 		path = os.path.join(self.templates_path, filename)
 		try:
 			return self._cache[path]
 		except KeyError:
-			self._cache[path] = FileInMemory(path=path, always_send=True, status_code=status_code)
+			self._cache[path] = FileInMemory(path=path, always_send=True, status=status)
 			return self._cache[path]
 
 
@@ -75,7 +75,7 @@ class CatchExceptions:
 				from django.views import debug
 				return debug.technical_500_response(request, *sys.exc_info())
 			else:
-				return self._page500(request, status_code=503)
+				return self._page500(request, status=503)
 
 		except OperationalError as ex:
 			log_res.error("OperationalError: ('%s';  '%s'; '%s'):\n\n%s\n\n%s" % (
@@ -90,7 +90,7 @@ class CatchExceptions:
 				from django.views import debug
 				return debug.technical_500_response(request, *sys.exc_info())
 			else:
-				return self._page500(request, status_code=503)
+				return self._page500(request, status=503)
 
 		except exceptions.PermissionDenied as pd:
 			if settings.DEBUG:
@@ -99,7 +99,7 @@ class CatchExceptions:
 
 		except NotImplementedError as ex:
 			self.GetLogger(request).error("%s\nNotImplemented Exception: %s" % (GetTraceback(request=request), ex))
-			return self._page500(request, status_code=503)
+			return self._page500(request, status=503)
 
 		except SystemExit:
 			pass # See http://code.djangoproject.com/ticket/1023

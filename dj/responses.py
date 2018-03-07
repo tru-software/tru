@@ -91,7 +91,7 @@ class FileInMemory:
 	mimetype = ''
 
 
-	def __init__(self, path, binary=False, always_send=False, reload=False, status_code=200):
+	def __init__(self, path, binary=False, always_send=False, reload=False, status=200):
 		self.path = path
 		self.reload = reload
 		self.binary = binary
@@ -101,7 +101,7 @@ class FileInMemory:
 		self.always_send=always_send
 		self.crc = None
 		self.content = None
-		self.status_code = status_code
+		self.status = status
 
 		self.Load()
 
@@ -118,8 +118,10 @@ class FileInMemory:
 		md5.update(self.content)
 		self.crc = base64.urlsafe_b64encode(md5.digest()).decode('ascii').rstrip('=').replace('-', '')
 
+	def __call__(self, request, status=None):
+		return self.Response(request, status=status)
 
-	def Response(self, request, status_code=None):
+	def Response(self, request, status=None):
 
 		statobj = self.last_modifcation
 		if self.reload is True:
@@ -131,7 +133,7 @@ class FileInMemory:
 			except:
 				pass
 
-		response = HttpResponse(self.content, status_code=status_code or self.status_code, content_type=self.mimetype)
+		response = HttpResponse(self.content, status=status or self.status, content_type=self.mimetype)
 		response["Last-Modified"] = self.http_date
 		response["Content-Length"] = len(self.content)
 		response["ETag"] = self.GetCRC()
