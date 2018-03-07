@@ -19,7 +19,7 @@ def CreateCrcLinkMD5(filename, block_size=1024*8):
 			if not data:
 				break
 			md5.update(data)
-	return base64.urlsafe_b64encode(md5.digest()).rstrip('=').replace('-', '')
+	return base64.urlsafe_b64encode(md5.digest()).decode().rstrip('=').replace('-', '')
 
 # ----------------------------------------------------------------------------
 
