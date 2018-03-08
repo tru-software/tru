@@ -25,9 +25,9 @@ def get_hexdigest(algorithm, salt, raw_password, hsh=None):
 	raw_password, salt = smart_str(raw_password), smart_str(salt)
 
 	if algorithm == 'md5':
-		return md5_constructor(salt + raw_password).hexdigest()
+		return md5_constructor((salt + raw_password).encode()).hexdigest()
 	elif algorithm == 'sha1':
-		return sha_constructor(salt + raw_password).hexdigest()
+		return sha_constructor((salt + raw_password).encode()).hexdigest()
 #	elif algorithm == '' and (salt == 'H' or salt == 'P'):
 #		return phpass.crypt_private(raw_password.encode('utf-8'), hsh, hash_prefix="$%s$" % (salt) )
 	log.error('Niepoprawny algorytm haszujący: %s' % (algorithm))
