@@ -236,7 +236,7 @@ def dict2str(d):
 		return ''
 
 	# return repr(d)
-	return base64.encodestring( pickle.dumps(d, pickle.HIGHEST_PROTOCOL) )
+	return base64.encodestring(pickle.dumps(d, pickle.HIGHEST_PROTOCOL)).decode('ascii')
 
 # -----------------------------------------------------------------------------
 
@@ -244,9 +244,14 @@ def str2dict(s):
 	if not s or s == 'None':
 		return {}
 	# try:
+
 	if s.startswith('{'):
 		return eval(s)
-	return pickle.loads(base64.decodestring(bytes(s,'UTF8')))
+
+	if isinstance(s, str):
+		s = s.encode('ascii')
+
+	return pickle.loads(base64.decodestring(s))
 	#except Exception as ex:
 	#	log.error( "Nie można zdeserializować wartości: %s\n%s\n\n%s" % (ex, str('\n'.join(traceback.format_exception(ex)), 'UTF8')), s )
 	return {}
