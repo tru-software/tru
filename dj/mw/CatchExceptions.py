@@ -47,7 +47,7 @@ class CatchExceptions:
 
 
 	def GetLogger(self, request):
-		return hasattr(request, 'current_service') and request.current_service.GetLogger() or log
+		return request and hasattr(request, 'current_service') and request.current_service and request.current_service.GetLogger() or log
 
 
 	def __call__(self, request):
