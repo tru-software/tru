@@ -58,9 +58,12 @@ class CatchExceptions:
 			if settings.DEBUG:
 				self.GetLogger(request).error("\n%s\n" % (GetTraceback(request=request)))
 				from django.views import debug
-				return debug.technical_404_response(request, e)
+				response = debug.technical_404_response(request, e)
+			else:
+				response = self._page404(request)
 
-			return self._page404(request)
+			response.source_exc = e
+			return response
 
 		except TooLongRequestException as ex:
 			log_res.error("TooLongRequestException: ('%s';  '%s'; '%s'):\n\n%s\n\n%s" % (
@@ -95,7 +98,9 @@ class CatchExceptions:
 		except exceptions.PermissionDenied as pd:
 			if settings.DEBUG:
 				self.GetLogger(request).error("%s\nPermissionDenied Exception: %s" % (GetTraceback(request=request), pd))
-			return self._page403(request)
+			response = self._page403(request)
+			response.source_exc = e
+			return response
 
 		except NotImplementedError as ex:
 			self.GetLogger(request).error("%s\nNotImplemented Exception: %s" % (GetTraceback(request=request), ex))
