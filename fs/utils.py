@@ -8,6 +8,7 @@ import logging
 import time
 import zlib
 import hashlib
+import ctypes
 
 from ..io import converters
 
@@ -56,7 +57,7 @@ def upload_file(post_file_dict, path, filename):
 
 	filepath = os.path.join(rel_path, filename)
 
-	f = file( filepath , "wb")
+	f = open( filepath , "wb")
 	if f is None:
 		raise Exception('Nie można toworzyć pliku do zapisu: %s' % filepath)
 	f.write(post_file_dict.read())
@@ -134,23 +135,23 @@ def FileNameExtension(fileName):
 # -------------------------------------------------------------------------------
 
 def GetCRCForData(data):
-	csum = None
+	csum = 0
 	if hasattr(data, 'read'):
 		while True:
 			buf = data.read(4 * 1024)
 			if not buf:
 				break
 			if csum is None:
-				csum = zlib.adler32(buf)
+				csum = zlib.crc32(buf)
 			else:
-				csum = zlib.adler32(buf, csum)
+				csum = zlib.crc32(buf, csum)
 	else:
 		for i in range(0, len(data), 4 * 1024):
 			if csum is None:
-				csum = zlib.adler32(data[i:i+4*1024])
+				csum = zlib.crc32(data[i:i+4*1024])
 			else:
-				csum = zlib.adler32(data[i:i+4*1024], csum)
-	return csum
+				csum = zlib.crc32(data[i:i+4*1024], csum)
+	return ctypes.c_int(csum & 0xFFFFFFFF ).value
 
 # -------------------------------------------------------------------------------
 

@@ -382,6 +382,9 @@ class Operations(object):
 						duration=[i.info.get('duration', duration) for i in frames]
 					)
 				else:
+					# FIXME: dlaczego jest potrzebny poniższy hack
+					first_frame.info['duration']=0
+					
 					save_params = dict(optimize=self.optimize)
 			elif fmt == 'JPEG':
 
