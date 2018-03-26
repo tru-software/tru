@@ -166,6 +166,9 @@ def GetSHA1ForData(data):
 				break
 			h.update(buf)
 	else:
+		if isinstance(data, str):
+			data = data.encode()
+			
 		# To ma w ogóle sens?
 		for i in range(0, len(data), 4 * 1024):
 			h.update(data[i:i+4*1024])
