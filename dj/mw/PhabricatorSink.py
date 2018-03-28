@@ -7,8 +7,10 @@ import logging
 import redis
 import socket
 import pprint
+import version
 
 from phabricator import Phabricator
+from django.http import HttpRequest
 
 from .CatchExceptions import CatchExceptions
 from ...io.hash import Hash32
@@ -33,14 +35,18 @@ def ReportBug(title, request, traceback, config=None):
 		log.error("PhabricatorSink: ReportBug: redis is not initialized")
 		return False
 
-	current_endpoint = getattr(request, 'CURRENT_ENDPOINT', None)
+	current_endpoint = getattr(request, 'CURRENT_ENDPOINT', None) if isinstance(request, HttpRequest) else request.name
 	# print(response._exc_details)
 	if traceback:
 		endpoint_hash = Hash32(traceback)
 		name = list(i for i in traceback.split('\n') if i.strip())[-1]
 	else:
-		endpoint_hash = Hash32(current_endpoint or request.full_url)
-		name = request.full_url
+		if isinstance(request, HttpRequest):
+			endpoint_hash = Hash32(current_endpoint or request.full_url)
+			name = request.full_url
+		else:
+			endpoint_hash = Hash32(request.name)
+			name = request.name
 
 	key = redis_master_key.format(endpoint_hash)
 
@@ -48,34 +54,40 @@ def ReportBug(title, request, traceback, config=None):
 
 	if not redis_conn.get(key):
 
-		environ = request.environ
-		profile = request._cached_profile if hasattr(request, '_cached_profile') else None
-		META = request.META
-
-		r = 'URL: {}\nMETHOD: {}\nUSER_AGENT: {}\nUSER: {}\nREMOTE_ADDR: {}\nCURRENT_ENDPOINT: {}\n'.format(
-			request.full_url,
-			request.method,
-			META.get('HTTP_USER_AGENT', 'NONE'),
-			profile,
-			META.get('REMOTE_ADDR', 'NONE'),
-			current_endpoint
-		)
-
-		p = 'PID: {} ({})\nHOST: {}\n'.format(os.getpid(), settings.SERVER_ID, hostname)
-
+		p = 'PID: {} ({})\nHOST: {}\nVERSION: {} (svn: {})'.format(os.getpid(), settings.SERVER_ID, hostname, version.number, version.svn_rev)
 		description = "Process:\n```{}```\n".format(p)
-		description += "\n\nRequest:\n```{}```\n".format(r)
+
+		if isinstance(request, HttpRequest):
+
+			environ = request.environ
+			profile = request._cached_profile if hasattr(request, '_cached_profile') else None
+			META = request.META
+
+			r = 'URL: {}\nMETHOD: {}\nUSER_AGENT: {}\nUSER: {}\nREMOTE_ADDR: {}\nCURRENT_ENDPOINT: {}\n'.format(
+				request.full_url,
+				request.method,
+				META.get('HTTP_USER_AGENT', 'NONE'),
+				profile,
+				META.get('REMOTE_ADDR', 'NONE'),
+				current_endpoint
+			)
+
+			description += "\n\nRequest:\n```{}```\n".format(r)
+
 		if traceback:
 			description += "\n\nTraceback:\n```{}```".format(traceback)
 
 		if config:
 			description += "\n\nConfig:\n```{}```".format(pprint.pformat(config))
 
-		description += "\n\nMETA:\n```{}```".format(pprint.pformat(META))
-		if request.POST:
-			description += "\n\nPOST:\n```{}```".format(pprint.pformat(request.POST))
-		if request.COOKIES:
-			description += "\n\nCOOKIES:\n```{}```".format(pprint.pformat(request.COOKIES))
+		if isinstance(request, HttpRequest):
+
+			description += "\n\nMETA:\n```{}```".format(pprint.pformat(META))
+			if request.POST:
+				description += "\n\nPOST:\n```{}```".format(pprint.pformat(request.POST))
+			if request.COOKIES:
+				description += "\n\nCOOKIES:\n```{}```".format(pprint.pformat(request.COOKIES))
+
 		description += "\n\nBug hash: `{}`".format(key)
 
 		ph = Phabricator(host=ph_api['url'], token=ph_api['token'])
