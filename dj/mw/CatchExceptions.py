@@ -16,7 +16,7 @@ from psycopg2._psycopg import OperationalError
 from .. import HttpRequest
 from ..responses import FileInMemory
 from ..WebExceptions import TooLongRequestException, WebException
-from ...utils.backtrace import GetTraceback
+from ...utils.backtrace import GetTraceback, FormatTraceback
 
 log = logging.getLogger(__name__)
 log_res = logging.getLogger('Resources')
@@ -66,34 +66,41 @@ class CatchExceptions:
 			return response
 
 		except TooLongRequestException as ex:
-			log_res.error("TooLongRequestException: ('%s';  '%s'; '%s'):\n\n%s\n\n%s" % (
+			traceback = FormatTraceback()
+			log_res.error("TooLongRequestException: ('{}';  '{}'; '{}'):\n{}".format(
 				request.META['REMOTE_ADDR'],
 				request.full_url,
 				request.META.get('HTTP_USER_AGENT', 'NONE'),
-				str(ex),
-				GetTraceback(request=request))
+				traceback,
+				)
 			)
 
 			if settings.DEBUG:
 				from django.views import debug
 				return debug.technical_500_response(request, *sys.exc_info())
-			else:
-				return self._page500(request, status=503)
+
+			response = self._page500(request, status=503)
+			response._exc_details = (ex, traceback)
+			return response
 
 		except OperationalError as ex:
-			log_res.error("OperationalError: ('%s';  '%s'; '%s'):\n\n%s\n\n%s" % (
+
+			traceback = FormatTraceback()
+			log_res.error("OperationalError: ('{}';  '{}'; '{}'):\n{}".format(
 				request.META['REMOTE_ADDR'],
 				request.full_url,
 				request.META.get('HTTP_USER_AGENT', 'NONE'),
-				str(ex),
-				GetTraceback(request=request))
+				traceback,
+				)
 			)
 
 			if settings.DEBUG:
 				from django.views import debug
 				return debug.technical_500_response(request, *sys.exc_info())
-			else:
-				return self._page500(request, status=503)
+
+			response = self._page500(request, status=503)
+			response._exc_details = (ex, traceback)
+			return response
 
 		except exceptions.PermissionDenied as pd:
 			if settings.DEBUG:
@@ -109,20 +116,24 @@ class CatchExceptions:
 		except SystemExit:
 			pass # See http://code.djangoproject.com/ticket/1023
 
-		except Exception as ex: # Handle everything else
-			self.GetLogger(request).error("Exception: ('%s';  '%s'; '%s'):\n\n%s\n\n%s" % (
+		except Exception as ex:  # Handle everything else
+
+			traceback = FormatTraceback()
+			self.GetLogger(request).error("Exception: ('{}';  '{}'; '{}'):\n{}".format(
 				request.META['REMOTE_ADDR'],
 				request.full_url,
 				request.META.get('HTTP_USER_AGENT', 'NONE'),
-				str(ex),
-				GetTraceback(request=request))
+				traceback,
+				)
 			)
 
-			if settings.DEBUG:
-				from django.views import debug
-				return debug.technical_500_response(request, *sys.exc_info())
-			else:
-				return self._page502(request)
+			#if settings.DEBUG:
+				#from django.views import debug
+				#return debug.technical_500_response(request, *sys.exc_info())
+
+			response = self._page502(request)
+			response._exc_details = (ex, traceback)
+			return response
 
 
 # ----------------------------------------------------------------------------

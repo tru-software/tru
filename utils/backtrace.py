@@ -13,7 +13,12 @@ from functools import wraps
 
 log = logging.getLogger(__name__)
 
-# ----------------------------------------------------------------------------
+
+def _make_str(x):
+	return x if isinstance(x, str) else x.decode('UTF8')
+
+def FormatTraceback():
+	return '\n'.join(map(_make_str, traceback.format_exception(*sys.exc_info())))
 
 def GetTraceback(exception=None, request=None):
 	r = '';
@@ -38,8 +43,7 @@ def GetTraceback(exception=None, request=None):
 		)
 
 	r += 'PID: {} ({})\n'.format(os.getpid(), settings.SERVER_ID)
-	make_str = lambda x: x if isinstance(x, str) else str(x, 'UTF8')
-	r += '\n'.join(map(make_str, traceback.format_exception(*sys.exc_info())))
+	r += FormatTraceback()
 	return r
 
 GetTraceback.GetRequest = lambda: None
