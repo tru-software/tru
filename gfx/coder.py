@@ -263,7 +263,7 @@ class ImageType(object):
 		def _getOpParams(self):
 			c = self.c or (0, 0, 0, 0)
 			c = tuple(map(int, c))
-			return pack('!HHHHHH', min(max(self.w or 0, 0), 0xFFFF), min(max(self.h or 0, 0), 0xFFFF), *c)
+			return pack('!HHHHHH', int(min(max(self.w or 0, 0), 0xFFFF)), int(min(max(self.h or 0, 0), 0xFFFF)), *c)
 
 		@classmethod
 		def decode(cls, data):
