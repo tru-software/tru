@@ -138,7 +138,7 @@ def PhabricatorSink(get_response):
 
 		response = get_response(request)
 
-		if response.status_code >= 500 and response.status_code <= 599:
+		if not settings.DEBUG and response.status_code >= 500 and response.status_code <= 599:
 
 			try:
 				if hasattr(response, '_exc_details'):
