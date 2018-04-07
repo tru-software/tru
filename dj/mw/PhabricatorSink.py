@@ -29,71 +29,49 @@ ttl = settings.PHABRICATOR_SINK['ttl']
 
 hostname = socket.gethostname()
 
-def ReportBug(title, request, traceback, config=None):
+
+def GetProcessInfo():
+	return 'PID: {} ({})\nHOST: {}\nVERSION: {} (svn: {})'.format(os.getpid(), settings.SERVER_ID, hostname, version.number, version.svn_rev)
+
+
+def FormatDescription(key, traceback, request=None, config=None):
+
+	description = "Process:\n```{}```\n".format(GetProcessInfo())
+	
+	if traceback:
+		description += "\n\nTraceback:\n```{}```".format(traceback)
+
+	if config:
+		description += "\n\nConfig:\n```{}```".format(pprint.pformat(config))
+
+	if request is not None and isinstance(request, HttpRequest):
+
+		description += "\n\nMETA:\n```{}```".format(pprint.pformat(request.META))
+		if request.POST:
+			description += "\n\nPOST:\n```{}```".format(pprint.pformat(request.POST))
+		if request.COOKIES:
+			description += "\n\nCOOKIES:\n```{}```".format(pprint.pformat(request.COOKIES))
+
+	description += "\n\nBug hash: `{}`".format(key)
+
+	return description
+
+
+def ReportToPhabricator(endpoint_hash, title, description):
 
 	if not POOL:
 		log.error("PhabricatorSink: ReportBug: redis is not initialized")
 		return False
 
-	current_endpoint = getattr(request, 'CURRENT_ENDPOINT', None) if isinstance(request, HttpRequest) else request.name
-	# print(response._exc_details)
-	if traceback:
-		endpoint_hash = Hash32(traceback)
-		name = list(i for i in traceback.split('\n') if i.strip())[-1]
-	else:
-		if isinstance(request, HttpRequest):
-			endpoint_hash = Hash32(current_endpoint or request.full_url)
-			name = request.full_url
-		else:
-			endpoint_hash = Hash32(request.name)
-			name = request.name
-
 	key = redis_master_key.format(endpoint_hash)
-
 	redis_conn = redis.Redis(connection_pool=POOL)
 
 	if not redis_conn.get(key):
 
-		p = 'PID: {} ({})\nHOST: {}\nVERSION: {} (svn: {})'.format(os.getpid(), settings.SERVER_ID, hostname, version.number, version.svn_rev)
-		description = "Process:\n```{}```\n".format(p)
-
-		if isinstance(request, HttpRequest):
-
-			environ = request.environ
-			profile = request._cached_profile if hasattr(request, '_cached_profile') else None
-			META = request.META
-
-			r = 'URL: {}\nMETHOD: {}\nUSER_AGENT: {}\nUSER: {}\nREMOTE_ADDR: {}\nCURRENT_ENDPOINT: {}\n'.format(
-				request.full_url,
-				request.method,
-				META.get('HTTP_USER_AGENT', 'NONE'),
-				profile,
-				META.get('REMOTE_ADDR', 'NONE'),
-				current_endpoint
-			)
-
-			description += "\n\nRequest:\n```{}```\n".format(r)
-
-		if traceback:
-			description += "\n\nTraceback:\n```{}```".format(traceback)
-
-		if config:
-			description += "\n\nConfig:\n```{}```".format(pprint.pformat(config))
-
-		if isinstance(request, HttpRequest):
-
-			description += "\n\nMETA:\n```{}```".format(pprint.pformat(META))
-			if request.POST:
-				description += "\n\nPOST:\n```{}```".format(pprint.pformat(request.POST))
-			if request.COOKIES:
-				description += "\n\nCOOKIES:\n```{}```".format(pprint.pformat(request.COOKIES))
-
-		description += "\n\nBug hash: `{}`".format(key)
-
 		ph = Phabricator(host=ph_api['url'], token=ph_api['token'])
 
 		task = ph.maniphest.createtask(
-			title=title + name,
+			title=title,
 			description=description,
 			ownerPHID=maniphest['owner'],
 			viewPolicy=maniphest['viewPolicy'],
@@ -129,6 +107,13 @@ def ReportBug(title, request, traceback, config=None):
 			pipe.set(key, json.dumps({"task": task['objectName'], "created": converters.datetime2json(created)}))
 			pipe.expire(key, ttl)
 			pipe.execute()
+
+
+def ReportBug(title, ex, traceback, config=None, request=None):
+
+	endpoint_hash = Hash32(traceback)
+	description = FormatDescription(endpoint_hash, traceback, config=config, request=request)
+	return ReportToPhabricator(endpoint_hash, title, description)
 
 
 def PhabricatorSink(get_response):
