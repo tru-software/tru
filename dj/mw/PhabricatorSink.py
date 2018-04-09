@@ -57,7 +57,7 @@ def FormatDescription(key, traceback, request=None, config=None):
 	return description
 
 
-def ReportToPhabricator(endpoint_hash, title, description):
+def ReportToPhabricator(endpoint_hash, title, description, conduit_gateway=None):
 
 	if not POOL:
 		log.error("PhabricatorSink: ReportBug: redis is not initialized")
@@ -67,13 +67,15 @@ def ReportToPhabricator(endpoint_hash, title, description):
 	redis_conn = redis.Redis(connection_pool=POOL)
 
 	if not redis_conn.get(key):
+		
+		api = ph_api[conduit_gateway or 'default']
 
-		ph = Phabricator(host=ph_api['url'], token=ph_api['token'])
+		ph = Phabricator(host=api['url'], token=api['token'])
 
 		task = ph.maniphest.createtask(
 			title=title,
 			description=description,
-			ownerPHID=maniphest['owner'],
+			ownerPHID=api.get('owner') or maniphest.get('owner'),
 			viewPolicy=maniphest['viewPolicy'],
 			editPolicy=maniphest['editPolicy'],
 			projectPHIDs=[maniphest['project']]
@@ -109,11 +111,11 @@ def ReportToPhabricator(endpoint_hash, title, description):
 			pipe.execute()
 
 
-def ReportBug(title, ex, traceback, config=None, request=None):
+def ReportBug(title, ex, traceback, config=None, request=None, conduit_gateway=None):
 
 	endpoint_hash = Hash32(traceback)
 	description = FormatDescription(endpoint_hash, traceback, config=config, request=request)
-	return ReportToPhabricator(endpoint_hash, title, description)
+	return ReportToPhabricator(endpoint_hash, title, description, conduit_gateway=conduit_gateway)
 
 
 def PhabricatorSink(get_response):
@@ -129,8 +131,9 @@ def PhabricatorSink(get_response):
 				if hasattr(response, '_exc_details'):
 					exc, traceback = response._exc_details
 				else:
+					exc = None
 					traceback = None
-				ReportBug("HTTP{}: ".format(response.status_code), request, traceback)
+				ReportBug("HTTP{}: ".format(response.status_code), exc, request=request, traceback=traceback, conduit_gateway='backend')
 			except Exception as ex:
 				logging.exception("Cannot report bug")
 
