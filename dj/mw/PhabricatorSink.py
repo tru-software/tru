@@ -133,7 +133,7 @@ def PhabricatorSink(get_response):
 				else:
 					exc = None
 					traceback = None
-				ReportBug("HTTP{}: ".format(response.status_code), exc, request=request, traceback=traceback, conduit_gateway='backend')
+				ReportBug("HTTP{}: {}".format(response.status_code, request.full_url), exc, request=request, traceback=traceback, conduit_gateway='backend')
 			except Exception as ex:
 				logging.exception("Cannot report bug")
 
