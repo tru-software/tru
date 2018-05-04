@@ -90,8 +90,23 @@ def Hash_v2(text):
 	return int(m.hexdigest(), 16)
 
 
+def Hash_crc32(text):
+
+	crc = 0
+
+	if isinstance(text, str):
+		crc = zlib.crc32(text.encode('utf8'))
+	elif isinstance(text, bytes):
+		crc = zlib.crc32(text)
+	else:
+		for i in _extract(text):
+			crc = zlib.crc32(i, crc)
+
+	return crc & 0xFFFFFFFF
+
+
 Hash = Hash_v2
-Hash32 = Hash_v1
+Hash32 = Hash_crc32
 
 
 def Distribution(text, options):
