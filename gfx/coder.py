@@ -381,11 +381,16 @@ class ImageType(object):
 
 		format, quality, op_code, color, contrast, brightness = unpack('!BBBbbb', data[0:6])
 
-		# Nowa wersja hash (zlib.adler32)
 		trx = data[:-4]
 		org_hash = unpack('!I', data[-4:])[0]
+
 		org_hash_34bit = org_hash
 		trx_hash = Hash(key + trx + filename) & 0xFFFFFFFF
+
+		if org_hash != trx_hash:
+			# Tymczasowa wersja dla PY2 i adler32
+			org_hash = org_hash_34bit
+			trx_hash = Hash_v1(key + trx + filename)
 
 		if org_hash != trx_hash:
 			# Tymczasowa wersja dla PY2 i adler32
@@ -411,7 +416,7 @@ class ImageType(object):
 			org_hash = org_hash_64bit
 
 		if org_hash != trx_hash:
-			raise ValueError('Invalid checksum {} != {}'.format(org_hash, trx_hash))
+			raise ValueError('Invalid checksum')
 
 		progressive = False
 		optimize = bool(format & 0x20)
