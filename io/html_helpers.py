@@ -213,7 +213,9 @@ class HTMLHelpers(object):
 
 	@staticmethod
 	def input_hidden(name, value):
-		return Markup('<input type="hidden" name="%s" value="%s" />' % (filters.html_escape(str(name)), filters.html_escape(str(value))))
+		if value is not None:
+			return Markup('<input type="hidden" name="%s" value="%s" />' % (filters.html_escape(str(name)), filters.html_escape(str(value))))
+		return Markup('')
 
 	wiszace_znaki = re.compile('(^|\s)(a|i|o|u|w|z|I)(\s+)')
 
