@@ -91,10 +91,10 @@ def ExecuteRouteMiddleware(get_response):
 				return HttpResponse(json.dumps({'error': {'msg': 'Zaloguj się', 'type': 'LoginRequired'}}), status=401)
 
 			if getattr(func, '_attr_ajax', False) == 'html':
-				return HttpResponse('<a href="{}">Zaloguj się</a>'.format(html_escape(FW.WebMgr.WebAppsByNames['MainPage'].Index.Link(login=request.full_url))), status=401)
+				return HttpResponse('<a href="{}">Zaloguj się</a>'.format(html_escape(FW.WebMgr.WebAppsByNames['MainPage'].Index.Link(login=request.full_url_protocol))), status=401)
 
 			if request.method == 'GET':
-				return HttpResponseRedirect(FW.WebMgr.WebAppsByNames['MainPage'].Index.Link(login=request.full_url))
+				return HttpResponseRedirect(FW.WebMgr.WebAppsByNames['MainPage'].Index.Link(login=request.full_url_protocol))
 			# elif request.method == 'POST':
 			#	return FW.HttpResponseRedirect(FW.WebMgr.WebAppsByNames['MainPage'].Index.Link())
 			return HttpResponse(status=401)
