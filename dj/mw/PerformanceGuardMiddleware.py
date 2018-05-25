@@ -9,6 +9,7 @@ TLR_ban_started = None
 TLR_counter = None
 TLR_check_start = None
 
+log = logging.getLogger(__name__)
 
 
 def PerformanceGuardMiddleware(get_response):
