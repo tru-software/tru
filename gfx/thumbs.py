@@ -497,7 +497,7 @@ def ImageExternalOpt(image_path):
 		try:
 			os.rename(image_path, image_path + '.org')
 		except FileNotFoundError as ex:
-			log.exception("File {} removed during optimization: {}".format(image_path, ex)))
+			log.exception("File {} removed during optimization: {}".format(image_path, ex))
 
 		os.rename(output, image_path)
 
