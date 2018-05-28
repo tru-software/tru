@@ -365,9 +365,10 @@ def unpack(array):
 # -----------------------------------------------------------------------------
 
 def getint(v):
-	if not v or (not v.isdigit() and not v.startswith('-')):
+	try:
+		return int(v)
+	except ValueError:
 		return 0
-	return int(v)
 
 # -------------------------------------------------------------------------------------------
 
