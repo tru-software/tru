@@ -494,12 +494,24 @@ def ImageExternalOpt(image_path):
 		raise ValueError('Cannot opt image ({}): "{}"'.format(process.returncode, image_path))
 
 	if opt_size and opt_size < org_size:
-		os.rename(image_path, image_path + '.org')
+		try:
+			os.rename(image_path, image_path + '.org')
+		except FileNotFoundError as ex:
+			log.exception("File {} removed during optimization: {}".format(image_path, ex)))
+
 		os.rename(output, image_path)
-		os.remove(image_path + '.org')
+
+		try:
+			os.remove(image_path + '.org')
+		except FileNotFoundError as ex:
+			pass
 		return (org_size, opt_size)
 
-	os.remove(output)
+	try:
+		os.remove(output)
+	except FileNotFoundError as ex:
+		pass
+
 	return (org_size, opt_size)
 
 # ------------------------------------------------------------------------
