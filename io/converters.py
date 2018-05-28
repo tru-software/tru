@@ -367,7 +367,7 @@ def unpack(array):
 def getint(v):
 	try:
 		return int(v)
-	except ValueError:
+	except:
 		return 0
 
 # -------------------------------------------------------------------------------------------
