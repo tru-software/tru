@@ -1,5 +1,5 @@
 def parse_page_number(string, maxv=None, minv=1):
-	if string.isdigit():
+	if string and string.isdigit():
 		page = int(string)
 		if maxv:
 			return min(maxv, max(minv, page))
