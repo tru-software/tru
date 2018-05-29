@@ -130,4 +130,8 @@ class AuthException(WebException, JSONResponse):
 			'error_description': self.description
 		}
 
+class BotRequestException(Exception):
+
+	def __init__(self, msg=''):
+		super().__init__(msg)
 

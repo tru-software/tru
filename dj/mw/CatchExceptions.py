@@ -15,7 +15,7 @@ from psycopg2._psycopg import OperationalError
 
 from .. import HttpRequest
 from ..responses import FileInMemory
-from ..WebExceptions import TooLongRequestException, WebException
+from ..WebExceptions import TooLongRequestException, WebException, BotRequestException
 from ...utils.backtrace import GetTraceback, FormatTraceback
 
 log = logging.getLogger(__name__)
@@ -34,6 +34,7 @@ class CatchExceptions:
 		self._page404 = self._load('404.html', status=404)  # HttpResponseNotFound
 		self._page500 = self._load('500.html', status=500)  # HttpResponseServerError
 		self._page502 = self._load('502.html', status=502)  # HttpResponseServerError
+		self._page503 = self._load('503.html', status=503)  # HttpResponseServiceUnavailable
 
 
 	def _load(self, filename, status):
@@ -109,6 +110,10 @@ class CatchExceptions:
 			response.source_exc = e
 			return response
 
+		except BotRequestException as ex:
+			self.GetLogger(request).info("%s\nBlocked bot: %s" % (GetTraceback(request=request), ex))
+			return self._page503(request, status=503)
+			
 		except NotImplementedError as ex:
 			self.GetLogger(request).error("%s\nNotImplemented Exception: %s" % (GetTraceback(request=request), ex))
 			return self._page500(request, status=503)

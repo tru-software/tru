@@ -2,8 +2,8 @@
 
 import time
 import logging
-
 from .CatchExceptions import CatchExceptions
+from ..WebExceptions import BotRequestException
 
 TLR_ban_started = None
 TLR_counter = None
@@ -30,7 +30,7 @@ def PerformanceGuardMiddleware(get_response):
 				log.error("Zakończenie blokowania BOTów")
 			else:
 				if request.IsBot or getattr(func, 'expensive_content', False):
-					return page503(request)
+					raise BotRequestException
 
 		response = get_response(request)
 		__end = time.time()
