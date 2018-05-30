@@ -171,7 +171,7 @@ def ParsePrice(x):
 def FormatPrice(price):
 	if not price:
 		return ''
-	return '{},{:02d}'.format(price/100, price%100) if price else ''
+	return '{},{:02d}'.format(price//100, price%100) if price else ''
 
 # -----------------------------------------------------------------------------
 
