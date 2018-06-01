@@ -12,6 +12,7 @@ import functools
 import shutil
 import mimetypes
 import subprocess
+import random
 
 from tru.utils.backtrace import GetTraceback
 from tru.fs.utils import TmpFile
@@ -470,7 +471,7 @@ def ImageExternalOpt(image_path):
 	if not mimetype.startswith('image/'):
 		raise ValueError('File is not an image: "{}"'.format(image_path))
 
-	output = image_path + '.tmp'
+	output = image_path + '.RND{}.tmp'.format(random.randrange(0xffffffff))
 	if os.path.isfile(output):
 		os.remove(output)
 
@@ -489,9 +490,10 @@ def ImageExternalOpt(image_path):
 	# process.returncode
 	process.wait()
 
-	opt_size = os.path.getsize(output)
 	if not os.path.isfile(output):
-		raise ValueError('Cannot opt image ({}): "{}"'.format(process.returncode, image_path))
+		raise ValueError('Cannot opt image ({}): "{}" -> "{}"'.format(process.returncode, image_path, output))
+
+	opt_size = os.path.getsize(output)
 
 	if opt_size and opt_size < org_size:
 		try:
