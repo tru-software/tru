@@ -236,7 +236,7 @@ def dict2str(d):
 		return ''
 
 	# return repr(d)
-	return base64.encodestring(pickle.dumps(d, pickle.HIGHEST_PROTOCOL)).decode('ascii')
+	return base64.encodestring(pickle.dumps(d)).decode('ascii')
 
 # -----------------------------------------------------------------------------
 
