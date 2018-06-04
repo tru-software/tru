@@ -24,7 +24,7 @@ from .mgr   import WebMgr
 from .route import IRoute
 from .view  import IView, ViewResponse
 from .attr  import WebAttr
-from .exceptions import *
+from ..WebExceptions import *
 
 from tru.utils.backtrace import GetTraceback
 from tru.dj.responses import NoCacheHttpResponse

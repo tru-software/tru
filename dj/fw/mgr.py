@@ -3,6 +3,7 @@
 import logging
 import settings
 import itertools
+import functools
 import time
 import types
 import copy
@@ -13,12 +14,16 @@ from threading import local
 from routes import Mapper, request_config
 from django.http import Http404, HttpResponseRedirect, HttpResponse
 
+from ..responses import RedirectWithJavaScriptResponse
+
 log = logging.getLogger(__name__)
 
 
 class ActionWrapper(object):
 
 	def __init__(self, obj, func, name):
+
+		functools.update_wrapper(self, func)
 
 		from .route import Route
 
@@ -29,15 +34,25 @@ class ActionWrapper(object):
 		if isinstance(func, types.MethodType):
 			self.func = func
 			if self.func._attr_public:
+				route = None
 				if hasattr(self.func, "_attr_route"):
-					self.route = self.func._attr_route
-				elif hasattr(self.func, "_attr_ajax"):
-					self.route = Route( '/webapi/{}/{}'.format( obj.__class__.__name__, name) )
+					route = self.func._attr_route
+
+				if hasattr(self.func, "_attr_ajax"):
+					if not route:
+						route = Route('/webapi/{}/{}'.format( obj.__class__.__name__, name))
+
+					self._attr_ajax = self.func._attr_ajax
+
+				if route is not None:
+					self.route = route
+
 			self.proc = self.func
 		elif isinstance(func, Route):
 			self.func = func
 			self.route = func
 			self.proc = func.Execute
+
 
 	def __call__(self, *args, **kwargs):
 		return self.proc(*args, **kwargs)
@@ -58,7 +73,6 @@ class ActionWrapper(object):
 		return HttpResponseRedirect( self.route(*args, **kwargs) )
 
 	def RedirectWithJavaScript(self, *args, **kwargs):
-		from .exceptions import RedirectWithJavaScriptResponse
 		return RedirectWithJavaScriptResponse( self.route(*args, **kwargs) )
 
 # ----------------------------------------------------------------------------
@@ -113,12 +127,13 @@ class WebManagerClass(object):
 		for name, func in list(comp_class.__dict__.items()):
 
 			if isinstance(func, types.FunctionType):
-				if getattr(func, '_attr_public', False) != True:
+				if getattr(func, '_attr_public', False) is not True:
 					continue
-				wrapper = ActionWrapper( obj, getattr(obj, name), name )
+				wrapper = ActionWrapper(obj, getattr(obj, name), name)
 				setattr(obj, name, wrapper)
 			elif isinstance(func, Route):
-				wrapper = ActionWrapper( obj, getattr(obj, name), name )
+				wrapper = ActionWrapper(obj, getattr(obj, name), name)
+				functools.update_wrapper(wrapper, getattr(obj, name))
 				setattr(obj, name, wrapper)
 
 	# ----------------------------------------------------------------------------

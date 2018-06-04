@@ -3,7 +3,7 @@
 import types
 import logging
 
-from .exceptions import InternalException
+from ..WebExceptions import InternalException
 
 log    = logging.getLogger(__name__)
 

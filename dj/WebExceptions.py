@@ -4,18 +4,19 @@ from django.http import HttpResponse
 import json
 
 
-class WebException(Exception):
+class RequestException(Exception):
 
 	__slots__ = ('args', 'message', 'help')
 
 	def __init__(self, msg, help=None):
 		self.help = help
-		super(WebException, self).__init__(msg)
+		super(RequestException, self).__init__(msg)
 
 	def serialize(self):
 		d = {'type': self.__class__.__name__, 'msg': str(self)}
 		return d
 
+WebException = RequestException
 
 class InputException(WebException):
 	"""
