@@ -60,6 +60,13 @@ class AccessException(WebException):
 		else:
 			super(AccessException, self).__init__(profile, help)
 
+class ExpireSessionException(WebException):
+	"""
+		Użytkownikowi skonczyła się sesja.
+	"""
+	def __init__(self, msg, help=None):
+		super(ExpireSessionException, self).__init__(msg, help)
+
 
 class LogicException(WebException):
 	"""
