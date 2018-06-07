@@ -12,6 +12,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidde
 from django.core import exceptions
 
 from psycopg2._psycopg import OperationalError
+from django.db.utils import OperationalError as DjangoOperationalError
 
 from .. import HttpRequest
 from ..responses import FileInMemory
@@ -86,7 +87,7 @@ class CatchExceptions:
 			response._exc_details = (ex, traceback)
 			return response
 
-		except OperationalError as ex:
+		except (OperationalError, DjangoOperationalError) as ex:
 
 			traceback = FormatTraceback()
 			log_res.error("OperationalError: ('{}';  '{}'; '{}'):\n{}".format(
@@ -103,6 +104,7 @@ class CatchExceptions:
 
 			response = self._page500(request, status=503)
 			response._exc_details = (ex, traceback)
+			response.skip_bug_reoprt = True
 			return response
 
 		except exceptions.PermissionDenied as pd:
@@ -114,7 +116,9 @@ class CatchExceptions:
 
 		except BotRequestException as ex:
 			self.GetLogger(request).info("%s\nBlocked bot: %s" % (GetTraceback(request=request), ex))
-			return self._page503(request, status=503)
+			response = self._page503(request, status=503)
+			response.skip_bug_reoprt = True
+			return response
 			
 		except NotImplementedError as ex:
 			self.GetLogger(request).error("%s\nNotImplemented Exception: %s" % (GetTraceback(request=request), ex))
@@ -140,6 +144,7 @@ class CatchExceptions:
 
 			response = self._page502(request)
 			response._exc_details = (ex, traceback)
+
 			return response
 
 
