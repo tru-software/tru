@@ -22,3 +22,28 @@ class LazyFullURLProtocol(object):
 HttpRequest.full_url = LazyFullURL()
 HttpRequest.full_url_protocol = LazyFullURLProtocol()
 
+
+# echo 'from tru.dj.django_helpers import ProcessRequest; print(ProcessRequest("https://wre.pl:8000/"))' | ./manage.py shell
+def ProcessRequest(url, method='GET', POST=None, headers={}):
+	from django.test import RequestFactory
+	request_factory = RequestFactory()
+
+	from django.core.handlers.wsgi import WSGIHandler
+	handler = WSGIHandler()
+	
+	from urllib.parse import urlparse, parse_qsl
+	url_parts = urlparse(url)
+
+	headers.update({
+		'HTTP_USER_AGENT': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.170 Safari/537.36',
+		'HTTP_HOST': url_parts.netloc,
+		'HTTP_X_SCHEME': url_parts.scheme,
+	})
+
+	if method == 'GET':
+		query = parse_qsl(url_parts.query)
+		return handler.get_response(request_factory.get(url_parts.path, query, **headers))
+	elif method == 'POST':
+		return handler.get_response(request_factory.post(url_parts.path, POST, **headers))
+	else:
+		raise ValueError("Unsupported method type: {}".format(method))

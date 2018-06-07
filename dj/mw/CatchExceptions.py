@@ -21,6 +21,8 @@ from ...utils.backtrace import GetTraceback, FormatTraceback
 log = logging.getLogger(__name__)
 log_res = logging.getLogger('Resources')
 
+# TODO: Override django.core.handlers.exception.response_for_exception
+
 class CatchExceptions:
 
 	templates_path = settings.BASE_DIR_FRONTEND + '/static/http/'
@@ -107,7 +109,7 @@ class CatchExceptions:
 			if settings.DEBUG:
 				self.GetLogger(request).error("%s\nPermissionDenied Exception: %s" % (GetTraceback(request=request), pd))
 			response = self._page403(request)
-			response.source_exc = e
+			response.source_exc = pd
 			return response
 
 		except BotRequestException as ex:
