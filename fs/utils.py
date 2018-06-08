@@ -52,18 +52,15 @@ def upload_file(post_file_dict, path, filename):
 
 	rel_path = path.rstrip('/')
 
-	if not os.access( rel_path, 0 ):
-		os.makedirs( rel_path )
+	if not os.access(rel_path, 0):
+		os.makedirs(rel_path)
 
 	filepath = os.path.join(rel_path, filename)
 
-	f = open( filepath , "wb")
-	if f is None:
-		raise Exception('Nie można toworzyć pliku do zapisu: %s' % filepath)
-	f.write(post_file_dict.read())
-	f.close()
+	with open(filepath , "wb") as f:
+		f.write(post_file_dict.read())
 
-	return os.stat( filepath )[6]
+	return os.stat(filepath)[6]
 
 # ------------------------------------------------------------------------
 
