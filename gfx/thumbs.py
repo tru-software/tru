@@ -489,6 +489,12 @@ def ImageExternalOpt(image_path):
 
 	# process.returncode
 	process.wait()
+	
+	# If conversion results in quality below the min quality the image won't be saved 
+	# (or if outputting to stdin, 24-bit original will be output) 
+	# and pngquant will exit with status code Er 99 
+	if mimetype == 'image/png' and process.returncode == 99:
+		return (org_size, org_size)
 
 	if not os.path.isfile(output):
 		raise ValueError('Cannot opt image ({}): "{}" -> "{}"'.format(process.returncode, image_path, output))
