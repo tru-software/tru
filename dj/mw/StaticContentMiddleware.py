@@ -5,7 +5,7 @@ import re
 import settings
 from django.urls.resolvers import URLResolver, RegexPattern
 from django.urls import Resolver404
-from django.http import Http404, HttpResponseNotFound
+from django.http import Http404
 
 def StaticContentMiddleware(get_response):
 
@@ -15,9 +15,7 @@ def StaticContentMiddleware(get_response):
 		try:
 			callback, callback_args, callback_kwargs = resolver.resolve(request.path)
 			return callback(request, *callback_args, **callback_kwargs)
-		except Http404 as e:
-			return HttpResponseNotFound(str(e))
-		except Resolver404 as e:
+		except (Resolver404, Http404) as e:
 			pass
 
 		return get_response(request)
