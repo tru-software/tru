@@ -54,6 +54,7 @@ class ViewResponse(HttpResponse, BaseException):
 	def __render_view(self):
 		self.content = self.view._render_context(self.request, self.env, self.proc)
 
+
 # ----------------------------------------------------------------------------
 
 class MakoView(IView):
