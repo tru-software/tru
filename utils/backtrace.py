@@ -6,7 +6,7 @@ import sys
 import traceback
 import threading
 import datetime
-import settings
+from django.conf import settings
 import pickle
 import logging
 from functools import wraps

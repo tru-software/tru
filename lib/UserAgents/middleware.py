@@ -2,7 +2,6 @@
 
 import re
 import logging
-from pyutils import GetTraceback
 
 from .checker import CheckBot, CheckMobile
 
@@ -56,7 +55,7 @@ class LazyIsBot(object):
 				try:
 					request._cached_isbot = True if hasattr(request, '_broken_remote_addr') else CheckBot(remote_addr, request.META['HTTP_USER_AGENT'])
 				except Exception as ex:
-					log.error('Cannot check bot ({}, {}): {}\n{}'.format(remote_addr, request.META['HTTP_USER_AGENT'], str(ex), GetTraceback(ex)))
+					log.exception('Cannot check bot ({}, {}): {}\n{}'.format(remote_addr, request.META['HTTP_USER_AGENT'], str(ex)))
 					request._cached_isbot = True
 			else:
 				request._cached_isbot = True

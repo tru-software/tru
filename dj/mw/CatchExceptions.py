@@ -5,7 +5,7 @@ import sys
 import re
 import datetime
 import time
-import settings
+from django.conf import settings
 import logging
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound, HttpResponseServerError, Http404

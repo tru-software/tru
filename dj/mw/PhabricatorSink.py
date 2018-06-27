@@ -1,13 +1,19 @@
 
+from django.conf import settings
+
 import os
-import settings
 import json
 import datetime
 import logging
 import redis
 import socket
 import pprint
-import version
+
+try:
+	import version
+	version_number, version_svn_rev = version.number, version.svn_rev
+except ImportError:
+	version_number, version_svn_rev = 0, 0
 
 from phabricator import Phabricator
 from django.http import HttpRequest
@@ -31,7 +37,7 @@ hostname = socket.gethostname()
 
 
 def GetProcessInfo():
-	return 'PID: {} ({})\nHOST: {}\nVERSION: {} (svn: {})'.format(os.getpid(), settings.SERVER_ID, hostname, version.number, version.svn_rev)
+	return 'PID: {} ({})\nHOST: {}\nVERSION: {} (svn: {})'.format(os.getpid(), settings.SERVER_ID, hostname, version_number, version_svn_rev)
 
 
 def FormatDescription(key, traceback, request=None, config=None):

@@ -14,7 +14,6 @@ log = logging.getLogger(__name__)
 
 def PerformanceGuardMiddleware(get_response):
 
-	@CatchExceptions
 	def process_request(request):
 		global TLR_ban_started
 		global TLR_counter

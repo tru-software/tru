@@ -3,7 +3,6 @@
 import time
 import logging
 import os
-import settings
 import re
 # http://www.user-agents.org/allagents.xml
 # http://user-agent-string.info/download/UASparser-for-Python

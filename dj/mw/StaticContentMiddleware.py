@@ -2,7 +2,7 @@
 
 import re
 
-import settings
+from django.conf import settings
 from django.urls.resolvers import URLResolver, RegexPattern
 from django.urls import Resolver404
 from django.http import Http404, HttpResponseNotFound

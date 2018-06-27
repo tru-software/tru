@@ -10,7 +10,7 @@
 
 import os
 import stat
-import settings
+from django.conf import settings
 import mimetypes
 import json
 import hashlib

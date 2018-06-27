@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import re
-import settings
+from django.conf import settings
 import logging
 
 from django.http import HttpResponseNotFound

@@ -3,7 +3,7 @@
 import re
 import urllib
 import logging
-import settings
+from django.conf import settings
 
 from django.http import HttpRequest, HttpResponseBadRequest
 

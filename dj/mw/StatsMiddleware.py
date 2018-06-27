@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import re
-import settings
+from django.conf import settings
 import resource
 import time
+import logging
 
 from .CatchExceptions import CatchExceptions
 
@@ -23,7 +24,7 @@ class StatsMiddleware:
 		self.get_response = get_response
 		self.log = self.external_log or logging.getLogger(__name__)
 
-	@CatchExceptions
+
 	def __call__(self, request):
 
 		proces_begin = time.time()
