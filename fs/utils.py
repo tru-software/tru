@@ -201,6 +201,9 @@ CreateCrcLink = CreateCrcLinkMD5
 class TmpFile:
 	def __init__ (self, filepath, mode='wb', perms=None):
 		self.filepath = filepath
+
+		os.makedirs(os.path.dirname(filepath), exist_ok=True)
+
 		self.f = open(filepath + '.tmp', mode=mode)
 		self.perms = perms
 	def __enter__ (self):
