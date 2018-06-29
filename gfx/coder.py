@@ -549,6 +549,14 @@ class CustomImageType(ImageType):
 
 # -------------------------------------------------------------------------------------------
 
+class DynamicImageType(ImageType):
+
+	def __init__(self, *args, **kwargs):
+		super(DynamicImageType, self).__init__(0, *args, **kwargs)
+		self.is_custom = True
+
+# -------------------------------------------------------------------------------------------
+
 class TemporaryImageType(ImageType):
 
 	def __init__(self, params={}):
