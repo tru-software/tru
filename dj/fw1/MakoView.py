@@ -17,7 +17,6 @@ from django.http import HttpResponse
 from tru.io import html_helpers
 from django.utils.translation import ugettext
 
-
 log = logging.getLogger(__name__)
 
 # ----------------------------------------------------------------------------
@@ -58,6 +57,8 @@ class ViewResponse(HttpResponse, BaseException):
 # ----------------------------------------------------------------------------
 
 class MakoView(IView):
+
+	STD_ENV = {}
 
 	def __init__(self, filename, dirs):
 		self.__mako_filename         = filename
@@ -174,6 +175,8 @@ class MakoView(IView):
 		# env['WebApps'] = WebAppsHelper
 		env['_'] = ugettext
 		env['HTML'] = html_helpers.HTMLHelpers
+
+		env.update(self.STD_ENV)
 
 		# env['LANG'] = request.LANGUAGE_CODE
 		# env['render_time'] = lambda: str( datetime.datetime.now().time() )

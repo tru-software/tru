@@ -47,3 +47,23 @@ def ProcessRequest(url, method='GET', POST=None, headers={}):
 		return handler.get_response(request_factory.post(url_parts.path, POST, **headers))
 	else:
 		raise ValueError("Unsupported method type: {}".format(method))
+
+
+from urllib.parse import urlencode
+from django.urls import reverse
+
+
+class URLGenerator:
+
+	@classmethod
+	def extract(cls, o):
+		if hasattr(o, 'GetURLPart'):
+			return o.GetURLPart()
+		return o
+
+	def generate(self, name, args, kwargs):
+		query_string = ('?' + urlencode({k: self.extract(v) for k, v in kwargs.items()}, encoding="utf8")) if kwargs else ''
+		return reverse(name, args=list(map(URLGenerator.extract, args))) + query_string
+
+	def __getattr__(self, name):
+		return lambda *a, **kw: self.generate(name, a, kw)
