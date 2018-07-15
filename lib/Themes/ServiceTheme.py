@@ -28,45 +28,47 @@ class ServiceTheme:
 
 	def __init__(self, id, path, url, mod):
 		self.id = id
-		self.path = path
+		self.path = Path(path)
 		self.url = url
 		self._theme_dir_name = id
 		self.script_url = None
 		self.script_crc32 = None
 
 		favicon = getattr(mod, 'favicon', None)
-
-		self.favicon_url = favicon
-		self.favicon_path = settings.BASE_DIR_FRONTEND / favicon if favicon else None
-		self.style = getattr(mod, 'style', None) or 'service.css'
-		self.script = None
-
-		if os.path.isfile(os.path.join(self.path, 'favicon.ico')):
+		if favicon:
+			self.favicon_url = os.path.join(self.url, favicon)
+			self.favicon_path = self.path / favicon
+		else:
 			self.favicon_url = self.url + '/favicon.ico'
 			self.favicon_path = self.path + '/favicon.ico'
 
+		if not os.path.isfile(self.favicon_path):
+			raise IOError(f'File "{self.favicon_path}" is missing')
+
+
+		self.style = getattr(mod, 'style', None) or 'service.css'
+		self.script = None
+
 		self.ImportProps(mod)
 
-		if favicon:
-			self.favicon = FileInMemory(path=self.favicon_path, binary=True)
-			self.favicon_url += "?v={}".format(self.favicon.GetCRC())
+		self.favicon = FileInMemory(path=str(self.favicon_path), binary=True)
+		self.favicon_url += "?v={}".format(self.favicon.GetCRC())
 
 		if not self.DEBUG:
 			self.style = self.style.replace('.css', '.min.css')
 			if self.script:
 				self.script = self.script.replace('.js', '.min.js')
 
-		self.style_url = filestamp.Mark(self.style, dir=self.path, netloc=self.url, debug=self.DEBUG)
+		self.style_url = filestamp.Mark(self.style, dir=str(self.path), netloc=self.url, debug=self.DEBUG)
 		if self.script:
-			self.script_url = filestamp.Mark(self.script, dir=self.path, netloc=self.url, debug=self.DEBUG)
+			self.script_url = filestamp.Mark(self.script, dir=str(self.path), netloc=self.url, debug=self.DEBUG)
 
-		self._favicon = None
 		self._touchicons_code = ''
 		self._touchicons_files = {} # dict: '57x57' (attr "sizes") => '/static/themes/../apple-touch-icon-precomposed.png' (attr "href")
 		self.theme_script_url = ''
 		self.theme_css_url = ''
 
-		touchicons = self.path + '/touch-icons.html'
+		touchicons = self.path / 'touch-icons.html'
 		if os.path.isfile(touchicons):
 			with open(touchicons, 'r') as f:
 				self._touchicons_code = cleanup_xhtml(f.read(), strip_comments=True).strip().replace('\n\n', '\n')
@@ -76,11 +78,11 @@ class ServiceTheme:
 						sizes = tag.get('sizes') or '57×57'
 						self._touchicons_files[sizes] = tag.get('href')
 
-		self.theme_css_url = filestamp.Mark(('service.css' if self.DEBUG else 'service.min.css'), dir=self.path, netloc=self.url, debug=self.DEBUG)
+		self.theme_css_url = filestamp.Mark(('service.css' if self.DEBUG else 'service.min.css'), dir=str(self.path), netloc=self.url, debug=self.DEBUG)
 
 		theme_script_url = 'script.js' if self.DEBUG else 'script.min.js'
 		if os.path.isfile(os.path.join(self.path, theme_script_url)):
-			self.theme_script_url = filestamp.Mark(theme_script_url, dir=self.path, netloc=self.url, debug=self.DEBUG)
+			self.theme_script_url = filestamp.Mark(theme_script_url, dir=str(self.path), netloc=self.url, debug=self.DEBUG)
 
 		self.OnLoadTheme(mod)
 
