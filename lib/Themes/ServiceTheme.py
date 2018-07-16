@@ -40,7 +40,7 @@ class ServiceTheme:
 			self.favicon_path = self.path / favicon
 		else:
 			self.favicon_url = self.url + '/favicon.ico'
-			self.favicon_path = self.path + '/favicon.ico'
+			self.favicon_path = self.path / 'favicon.ico'
 
 		if not os.path.isfile(self.favicon_path):
 			raise IOError(f'File "{self.favicon_path}" is missing')
