@@ -55,6 +55,9 @@ from django.urls import reverse
 
 class URLGenerator:
 
+	def __init__(self, base_url=None):
+		self.base_url = (base_url or '').rstrip('/')
+
 	@classmethod
 	def extract(cls, o):
 		if hasattr(o, 'GetURLPart'):
@@ -63,7 +66,7 @@ class URLGenerator:
 
 	def generate(self, name, args, kwargs):
 		query_string = ('?' + urlencode({k: self.extract(v) for k, v in kwargs.items()}, encoding="utf8")) if kwargs else ''
-		return reverse(name, args=list(map(URLGenerator.extract, args))) + query_string
+		return self.base_url + reverse(name, args=list(map(URLGenerator.extract, args))) + query_string
 
 	def __getattr__(self, name):
 		return lambda *a, **kw: self.generate(name, a, kw)

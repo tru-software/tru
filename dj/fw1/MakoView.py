@@ -34,7 +34,7 @@ class ViewResponse(HttpResponse, BaseException):
 
 	def __init__(self, view, request=None, env=None, proc=None):
 
-		super(ViewResponse, self).__init__(content_type='text/html')
+		super(ViewResponse, self).__init__(content_type='text/html; charset=utf-8')
 
 		self.view = view
 		self.env = env
@@ -176,7 +176,8 @@ class MakoView(IView):
 		env['_'] = ugettext
 		env['HTML'] = html_helpers.HTMLHelpers
 
-		env.update(self.STD_ENV)
+		for k, v in self.STD_ENV.items():
+			env[k] = env.get(k, v)
 
 		# env['LANG'] = request.LANGUAGE_CODE
 		# env['render_time'] = lambda: str( datetime.datetime.now().time() )
