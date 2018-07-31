@@ -55,10 +55,17 @@ class FileMgr:
 
 	def FetchFile(self, request):
 
-		if request.META['CONTENT_TYPE'] == 'multipart/form-data':
-			fileName = request.META["HTTP_X_FILE_NAME"]
-			fileSize = int(request.META["CONTENT_LENGTH"])
-			data = request.read(fileSize)
+		if request.META['CONTENT_TYPE'].startswith('multipart/form-data'):
+			if 'upload' in request.FILES:
+				f = request.FILES['upload']
+				fileName = f.name
+				fileSize = f.size
+				# f.content_type
+				data = f.read(fileSize)
+			if 'HTTP_X_FILE_NAME' in request.META:
+				fileName = request.META["HTTP_X_FILE_NAME"]
+				fileSize = int(request.META["CONTENT_LENGTH"])
+				data = request.read(fileSize)
 		elif request.META['CONTENT_TYPE'] == 'application/octet-stream':
 			fileName = request.META["HTTP_X_FILE_NAME"]
 			fileSize = int(request.META["CONTENT_LENGTH"])
@@ -86,7 +93,7 @@ class FileMgr:
 			if mimetype.startswith(i.mimetype):
 				break
 		else:
-			raise InputException('file', 'Plik nie został rozpoznany jako jeden z wspieranych')
+			raise InputException('file', f'Plik typu "{mimetype}" nie został rozpoznany jako jeden z wspieranych')
 
 		# Dodatkowe testy na poprawność pliku/danych
 

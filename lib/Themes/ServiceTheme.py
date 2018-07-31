@@ -137,6 +137,9 @@ class ServiceTheme:
 			return filepath
 		return self.url + '/' + filepath.lstrip('/')
 
+	def GetThemeFilePath(self, filepath):
+		return self.path / filepath.lstrip('/')
+
 	def GetThemeCSSURL(self, request):
 		return self.theme_css_url
 
