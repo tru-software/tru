@@ -53,8 +53,11 @@ class Przelewy24(object):
 
 class PaymentForm(Przelewy24):
 
-	def __init__(self, payment, url_return, url_cancel):
+	def __init__(self, merchant_id, crc, description, payment, url_return, url_cancel):
 
+		self.PRZELEWY24_ID = merchant_id
+		self.PRZELEWY24_CRC = crc
+		self.description = description
 		self.session_key = payment.session_key
 		self.email = payment.owner_email
 		self.url_return = url_return
@@ -66,18 +69,18 @@ class PaymentForm(Przelewy24):
 
 	def GetFields(self):
 		return {
+			"p24_api_version" : "3.2",
 			"p24_merchant_id" : self.PRZELEWY24_ID,
 			"p24_pos_id"      : self.PRZELEWY24_ID,
 			"p24_session_id"  : self.session_key,
 			"p24_amount"      : self.price,
 			"p24_currency"    : "PLN",
 			# "p24_description" : "TEST_ERR04",
-			"p24_description" : "Zakup zdjęć",
-			"p24_email"       : self.email,
+			"p24_description" : "Zakup produktów",
+			"p24_email"       : self.email or 'at@tru.pl',
 			"p24_country"     : "PL",
 			"p24_url_return"  : self.url_return,
 			"p24_url_cancel"  : self.url_cancel,
-			"p24_api_version" : "3.1",
 			"p24_encoding"    : "UTF-8",
 			"p24_sign"        : self.CRC(self.session_key, self.PRZELEWY24_ID, self.price, 'PLN'),
 		}
