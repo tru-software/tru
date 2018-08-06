@@ -35,7 +35,7 @@ class FileMgr:
 
 	class FileExts:
 		AUDIO = FileType('audio/', ('mp3', 'wav', 'm4a', 'mid', 'mpa', 'ra', 'wma', 'ogg'))
-		IMAGE = FileType('image/', ('jpg', 'jpeg', 'png', 'gif'))
+		IMAGE = FileType('image/', ('jpg', 'jpeg', 'png', 'gif', 'bmp', 'mpo'))
 		EXCEL = FileType(('application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/octet-stream', 'application/vnd.ms-office', 'application/vnd.oasis.opendocument.spreadsheet'), ('xls', 'xlsx', 'odt'))
 		WORD  = FileType(('application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.oasis.opendocument.text'), ('doc', 'docx', 'ods'))
 		PPT   = FileType(('application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.oasis.opendocument.presentation'), ('pps', 'ppsx', 'odp'))
@@ -101,14 +101,14 @@ class FileMgr:
 			try:
 				stream = io.BytesIO(data)
 				im = Image.open(stream)
-				if im.format not in ('JPEG', 'PNG', 'GIF'):
+				if im.format not in ('JPEG', 'PNG', 'GIF', 'BMP', 'MPO'):
 					log.error("Unsupported image format: %s" % (im.format))
 					raise InputException('file', 'Format obrazu "{}" nie jest wspierany'.format(im.format))
 
 				# http://effbot.org/imagingbook/image.htm#tag-Image.Image.verify
 				im.load()
 
-				ext = dict(JPEG='.jpg', PNG='.png', GIF='.gif').get(im.format)
+				ext = dict(JPEG='.jpg', PNG='.png', GIF='.gif', BMP='.bmp', MPO='.jpeg').get(im.format)
 				return data, ext, fileName, mimetype, im
 			except WebException as ex:
 				raise
@@ -140,7 +140,7 @@ class FileMgr:
 		dest_dir = self.GetDirName(request)
 		self.EnsureExist(self.UPLOAD_DIR + '/' + dest_dir)
 		return dest_dir, str(uuid.uuid4()).replace('-', '')
-	
+
 	def CheckFreeSpace(self, request):
 
 		fs_limit = self.GetFilesSpaceLimit(request)
