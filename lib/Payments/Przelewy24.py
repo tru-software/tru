@@ -40,9 +40,9 @@ class Przelewy24(object):
 	PRZELEWY24_ID = None  # TODO: uzuepłnij
 	PRZELEWY24_CRC = None  # TODO: uzuepłnij
 	PRZELEWY24_ADDRS = [
-		list(netaddr.iter_iprange('217.168.139.48', '217.168.139.55')),
-		list(netaddr.iter_iprange('217.168.128.198', '217.168.128.202')),
-		list(netaddr.iter_iprange('91.216.191.181', '91.216.191.185'))
+		list(netaddr.iter_iprange('217.168.139.48', '217.168.139.55')),  # 217.168.139.48/29
+		list(netaddr.iter_iprange('217.168.128.198', '217.168.128.202')),  # 217.168.128.198/31  217.168.128.200/31  217.168.128.202/32
+		list(netaddr.iter_iprange('91.216.191.181', '91.216.191.185'))  # 91.216.191.181/32  91.216.191.182/31  91.216.191.184/31
 	]
 
 
