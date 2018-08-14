@@ -43,6 +43,7 @@ class FileMgr:
 		XML   = FileType(('application/xml','text/xml'), ('xml', ))
 
 	ALLOWED_TYPES = [FileExts.IMAGE, FileExts.AUDIO]
+	ALLOWED_IMAGE_FORMATS = dict(JPEG='.jpg', PNG='.png', GIF='.gif', BMP='.bmp', MPO='.jpeg')
 	FILE_UPLOAD_MAX_SIZE = settings.FILE_UPLOAD_MAX_MEMORY_SIZE
 	UPLOAD_DIR = settings.UPLOAD_DIR
 	NAMESPACE = "uploads-tmp"
@@ -101,14 +102,14 @@ class FileMgr:
 			try:
 				stream = io.BytesIO(data)
 				im = Image.open(stream)
-				if im.format not in ('JPEG', 'PNG', 'GIF', 'BMP', 'MPO'):
+				if im.format not in self.ALLOWED_IMAGE_FORMATS:
 					log.error("Unsupported image format: %s" % (im.format))
 					raise InputException('file', 'Format obrazu "{}" nie jest wspierany'.format(im.format))
 
 				# http://effbot.org/imagingbook/image.htm#tag-Image.Image.verify
 				im.load()
 
-				ext = dict(JPEG='.jpg', PNG='.png', GIF='.gif', BMP='.bmp', MPO='.jpeg').get(im.format)
+				ext = self.ALLOWED_IMAGE_FORMATS.get(im.format)
 				return data, ext, fileName, mimetype, im
 			except WebException as ex:
 				raise
