@@ -535,6 +535,32 @@ class ImageType(object):
 		if not self.thumb:
 			return (77, 77)
 		return self.thumb.GetNoPictureSizeInts()
+	
+	@staticmethod
+	def GetExtFromPath(img):
+		if not img:
+			return None
+		img = img.lower()
+		if img.endswith('.png'):
+			return 'PNG'
+		elif img.endswith(('.jpg', '.jpeg')):
+			return 'JPEG'
+		elif img.endswith('.gif'):
+			return 'GIF'
+		return None
+
+	def GetMimeType(self, img=None):
+
+		fmt = self.save_to.format or self.GetExtFromPath(img) or 'JPEG'
+
+		if fmt == 'GIF':
+			return "image/gif"
+		elif fmt == 'PNG':
+			return "image/png"
+		elif fmt == 'JPEG':
+			return "image/jpeg"
+
+		return "image/jpeg"
 
 	def __str__(self):
 		return 'ImageType.{}({}, {})'.format(self.thumb.__class__.__name__, self.id, self.get_params())

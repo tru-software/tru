@@ -104,7 +104,7 @@ class CatchExceptions:
 
 			response = self._page500(request, status=503)
 			response._exc_details = (ex, traceback)
-			response.skip_bug_reoprt = True
+			response.skip_bug_report = True
 			return response
 
 		except exceptions.PermissionDenied as pd:
@@ -117,7 +117,7 @@ class CatchExceptions:
 		except BotRequestException as ex:
 			self.GetLogger(request).info("%s\nBlocked bot: %s" % (GetTraceback(request=request), ex))
 			response = self._page503(request, status=503)
-			response.skip_bug_reoprt = True
+			response.skip_bug_report = True
 			return response
 			
 		except NotImplementedError as ex:

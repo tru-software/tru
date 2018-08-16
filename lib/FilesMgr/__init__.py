@@ -43,7 +43,7 @@ class FileMgr:
 		XML   = FileType(('application/xml','text/xml'), ('xml', ))
 
 	ALLOWED_TYPES = [FileExts.IMAGE, FileExts.AUDIO]
-	ALLOWED_IMAGE_FORMATS = {'JPEG', 'PNG', 'GIF', 'BMP', 'MPO'}
+	ALLOWED_IMAGE_FORMATS = dict(JPEG='.jpg', PNG='.png', GIF='.gif', BMP='.bmp', MPO='.jpeg')
 	FILE_UPLOAD_MAX_SIZE = settings.FILE_UPLOAD_MAX_MEMORY_SIZE
 	UPLOAD_DIR = settings.UPLOAD_DIR
 	NAMESPACE = "uploads-tmp"
@@ -109,7 +109,7 @@ class FileMgr:
 				# http://effbot.org/imagingbook/image.htm#tag-Image.Image.verify
 				im.load()
 
-				ext = dict(JPEG='.jpg', PNG='.png', GIF='.gif', BMP='.bmp', MPO='.jpeg').get(im.format)
+				ext = self.ALLOWED_IMAGE_FORMATS.get(im.format)
 				return data, ext, fileName, mimetype, im
 			except WebException as ex:
 				raise
