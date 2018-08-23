@@ -66,14 +66,14 @@ class Validator(object):
 
 	__metaclass__ = ABCMeta
 
-	err_message = "failed validation"
-	not_message = "failed validation"
+	err_message = {None : "failed validation"}
+	not_message = {None : "failed validation"}
 
 	def __init__(self, msg=None, not_msg=None):
 		if msg:
-			self.err_message = msg
+			self.err_message.update(msg)
 		if not_msg:
-			self.not_message = not_msg
+			self.not_message.update(not_msg)
 		super().__init__()
 
 	
@@ -99,8 +99,8 @@ class In(Validator):
 
 	def __init__(self, collection, **kwargs):
 		self.collection = collection
-		self.err_message = "Proszę wybrać z następujących z opcji %r" % collection
-		self.not_message = "Proszę wybrac opcję, niebędącą jedną z następujących %r" % collection
+		self.err_message = {None : "Proszę wybrać z następujących z opcji %r" % collection}
+		self.not_message = {None : "Proszę wybrac opcję, niebędącą jedną z następujących %r" % collection}
 		super().__init__(**kwargs)
 
 	def __call__(self, value):
@@ -131,7 +131,7 @@ class Range(Validator):
 	the range is inclusive, though the
 	range can be made excusive by setting
 	inclusive to false.
-
+d
 	# Example:
 		validations = {
 			"field": [Range(0, 10)]
@@ -145,8 +145,8 @@ class Range(Validator):
 		self.start = start
 		self.end = end
 		self.inclusive = inclusive
-		self.err_message = "wartość musi zawierać sie w przedziale pomiędzy %s, a %s" % (start, end)
-		self.not_message = "wartość musi być spoza przedziału pomiędzy %s, a %s" % (start, end)
+		self.err_message = {None : "wartość musi zawierać sie w przedziale pomiędzy %s, a %s" % (start, end)}
+		self.not_message = {None : "wartość musi być spoza przedziału pomiędzy %s, a %s" % (start, end)}
 		super().__init__(**kwargs)
 
 	def __call__(self, value):
@@ -176,8 +176,8 @@ class GreaterThan(Validator):
 	def __init__(self, lower_bound, inclusive=False, **kwargs):
 		self.lower_bound = lower_bound
 		self.inclusive = inclusive
-		self.err_message = "wartośc musi być większa niż %s" % lower_bound
-		self.not_message = "wartośc nie może być większa niż  %s" % lower_bound
+		self.err_message = {None : "wartośc musi być większa niż %s" % lower_bound}
+		self.not_message = {None : "wartośc nie może być większa niż  %s" % lower_bound}
 		super().__init__(**kwargs)
 
 	def __call__(self, value):
@@ -205,8 +205,8 @@ class Equals(Validator):
 
 	def __init__(self, obj, **kwargs):
 		self.obj = obj
-		self.err_message = "wartośc musi być równa %r" % obj
-		self.not_message = "wartośc nie może być równa %r" % obj
+		self.err_message = {None : "wartośc musi być równa %r" % obj}
+		self.not_message = {None : "wartośc nie może być równa %r" % obj}
 		super().__init__(**kwargs)
 
 	def __call__(self, value):
@@ -232,8 +232,8 @@ class Blank(Validator):
 	"""
 
 	def __init__(self, **kwargs):
-		self.err_message = "Pole musi być puste"
-		self.not_message = "Proszę uzupełnić pole"
+		self.err_message = {None : "Pole musi być puste"}
+		self.not_message = {None : "Proszę uzupełnić pole"}
 		super().__init__(**kwargs)
 
 	def __call__(self, value):
@@ -258,8 +258,8 @@ class Truthy(Validator):
 	"""
 
 	def __init__(self, **kwargs):
-		self.err_message = "must be True-equivalent value"
-		self.not_message = "must be False-equivalent value"
+		self.err_message = {None : "must be True-equivalent value"}
+		self.not_message = {None : "must be False-equivalent value"}
 		super().__init__(**kwargs)
 
 	def __call__(self, value):
@@ -297,8 +297,8 @@ class MissingFieldMessage():
 	def __init__(self, msg):
 		self.message = msg
 
-	def __call__(self):
-		return self.message
+	def __call__(self, lang):
+		return self.message.get(lang)
 
 
 class Email(Validator):
@@ -318,8 +318,8 @@ class Email(Validator):
 	"""
 
 	def __init__(self, **kwargs):
-		self.err_message = "Proszę podać poprawny adres e-mail"
-		self.not_message = "Pole nie może być adresem e-mail"
+		self.err_message = {None : "Proszę podać poprawny adres e-mail"}
+		self.not_message = {None : "Pole nie może być adresem e-mail"}
 		super().__init__(**kwargs)
 
 	def __call__(self, value):
@@ -347,8 +347,8 @@ class InstanceOf(Validator):
 
 	def __init__(self, base_class, **kwargs):
 		self.base_class = base_class
-		self.err_message = "must be an instance of %s or its subclasses" % base_class.__name__
-		self.not_message = "must not be an instance of %s or its subclasses" % base_class.__name__
+		self.err_message = {None : "must be an instance of %s or its subclasses" % base_class.__name__}
+		self.not_message = {None : "must not be an instance of %s or its subclasses" % base_class.__name__}
 		super().__init__(**kwargs)
 
 	def __call__(self, value):
@@ -372,8 +372,8 @@ class SubclassOf(Validator):
 
 	def __init__(self, base_class, **kwargs):
 		self.base_class = base_class
-		self.err_message = "must be a subclass of %s" % base_class.__name__
-		self.not_message = "must not be a subclass of %s" % base_class.__name__
+		self.err_message = {None : "must be a subclass of %s" % base_class.__name__}
+		self.not_message = {None : "must not be a subclass of %s" % base_class.__name__}
 		super().__init__(**kwargs)
 
 	def __call__(self, class_):
@@ -398,8 +398,8 @@ class Pattern(Validator):
 
 	def __init__(self, pattern, **kwargs):
 		self.pattern = pattern
-		self.err_message = "must match regex pattern %s" % pattern
-		self.not_message = "must not match regex pattern %s" % pattern
+		self.err_message = {None : "must match regex pattern %s" % pattern}
+		self.not_message = {None : "must not match regex pattern %s" % pattern}
 		self.compiled = re.compile(pattern)
 		super().__init__(**kwargs)
 
@@ -496,14 +496,14 @@ class Length(Validator):
 		self.minimum = minimum
 		self.maximum = maximum
 		if minimum and maximum:
-			self.err_message = self.err_messages["range"].format(' ', minimum, maximum)
-			self.not_message = self.err_messages["range"].format(' not ', minimum, maximum)
+			self.err_message = {None : self.err_messages["range"].format(' ', minimum, maximum)}
+			self.not_message = {None : self.err_messages["range"].format(' not ', minimum, maximum)}
 		elif minimum:
-			self.err_message = self.err_messages["minimum"].format(minimum)
-			self.not_message = self.err_messages["maximum"].format(minimum - 1)
+			self.err_message = {None : self.err_messages["minimum"].format(minimum)}
+			self.not_message = {None : self.err_messages["maximum"].format(minimum - 1)}
 		elif maximum:
-			self.err_message = self.err_messages["maximum"].format(maximum)
-			self.not_message = self.err_messages["minimum"].format(maximum + 1)
+			self.err_message = {None : self.err_messages["maximum"].format(maximum)}
+			self.not_message = {None : self.err_messages["minimum"].format(maximum + 1)}
 		super().__init__(**kwargs)
 
 	def __call__(self, value):
@@ -530,8 +530,8 @@ class Contains(Validator):
 
 	def __init__(self, contained, **kwargs):
 		self.contained = contained
-		self.err_message = "must contain {0}".format(contained)
-		self.not_message = "must not contain {0}".format(contained)
+		self.err_message = {None : "must contain {0}".format(contained)}
+		self.not_message = {None : "must not contain {0}".format(contained)}
 		super().__init__(**kwargs)
 
 	def __call__(self, container):
@@ -581,7 +581,7 @@ class Each(Validator):
 		return (len(errors) == 0, errors)
 
 
-def validate(validation, dictionary):
+def validate(validation, dictionary, lang=None):
 	"""
 	Validate that a dictionary passes a set of
 	key-based validators. If all of the keys
@@ -607,17 +607,17 @@ def validate(validation, dictionary):
 			if Required in validation[key]:
 				if not Required(key, dictionary):
 					messager = next((filter(lambda m: isinstance(m, MissingFieldMessage), validation[key])), None)
-					errors[key] = messager() if messager else "must be present"
+					errors[key] = [messager(lang) or messager(None) if messager else "must be present"]
 					continue
-			_validate_list_helper(validation, dictionary, key, errors)
+			_validate_list_helper(validation, dictionary, key, errors, lang)
 		else:
 			v = validation[key]
 			if v == Required:
 				if not Required(key, dictionary):
-					errors[key] = "must be present"
+					errors[key] = ["must be present"]
 					pass
 			else:
-				_validate_and_store_errs(v, dictionary, key, errors)
+				_validate_and_store_errs(v, dictionary, key, errors, lang)
 	if len(errors) > 0:
 		# `errors` gets downgraded from defaultdict to dict
 		# because it makes for prettier output
@@ -625,7 +625,7 @@ def validate(validation, dictionary):
 	else:
 		return ValidationResult(valid=True, errors=[])
 
-def _validate_and_store_errs(validator, dictionary, key, errors):
+def _validate_and_store_errs(validator, dictionary, key, errors, lang):
 
 	# Validations shouldn't throw exceptions because of
 	# type mismatches and the like. If the rule is 'Length(5)' and
@@ -640,7 +640,7 @@ def _validate_and_store_errs(validator, dictionary, key, errors):
 		# Since we caught an exception while trying to validate,
 		# treat it as a failure and return the normal error message
 		# for that validator.
-		valid = (False, validator.err_message)
+		valid = (False, validator.err_message.get(lang))
 	if isinstance(valid, tuple):
 		valid, errs = valid
 		if errs and isinstance(errs, list):
@@ -651,9 +651,9 @@ def _validate_and_store_errs(validator, dictionary, key, errors):
 		# set a default error message for things like lambdas
 		# and other callables that won't have an err_message set.
 		msg = getattr(validator, "err_message", "failed validation")
-		errors[key].append(msg)
+		errors[key].append(msg.get(lang, msg.get(None, "failed validation")))
 
-def _validate_list_helper(validation, dictionary, key, errors):
+def _validate_list_helper(validation, dictionary, key, errors, lang):
 	for v in validation[key]:
 		# don't break on optional keys
 		if key in dictionary:
@@ -681,4 +681,4 @@ def _validate_list_helper(validation, dictionary, key, errors):
 						errors[key].append(dependent[1])
 				# handling for normal validators
 				else:
-					_validate_and_store_errs(v, dictionary, key, errors)
+					_validate_and_store_errs(v, dictionary, key, errors, lang)
