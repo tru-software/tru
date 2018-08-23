@@ -25,3 +25,17 @@ def ParsePrice(price):
 def TimeInRange(time_range, now=None):
 	now = now or datetime.datetime.now()
 	return (now.hour * 100 + now.minute) in time_range
+
+
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
+
+def IsValidURL(url):
+	val = URLValidator(schemes=['http', 'https'])
+	try:
+		val(url)
+		return True
+	except ValidationError as e:
+		pass
+
+	return False
