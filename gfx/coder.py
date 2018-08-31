@@ -356,6 +356,12 @@ class ImageType(object):
 		if self.watermark and watermark is not None:
 			yield watermark
 
+	def GetFinalSize(self, img_w, img_h, **kwargs):
+		for i in self.GetOps(**kwargs):
+			img_w, img_h = i.GetFinalSize(img_w, img_h)
+		return img_w, img_h
+
+
 	def PublicId(self):
 		return self.prefix + str(self.id)
 
