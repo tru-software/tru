@@ -36,27 +36,28 @@ ttl = settings.PHABRICATOR_SINK['ttl']
 hostname = socket.gethostname()
 
 
-def GetProcessInfo():
-	return 'PID: {} ({})\nHOST: {}\nVERSION: {} (svn: {})'.format(os.getpid(), settings.SERVER_ID, hostname, version_number, version_svn_rev)
+def GetProcessInfo(request=None):
+	url = request.build_absolute_uri() if request else None
+	return 'PID: {} ({})\nHOST: {}\nVERSION: {} (svn: {})\nURL: {}'.format(os.getpid(), settings.SERVER_ID, hostname, version_number, version_svn_rev, url)
 
 
 def FormatDescription(key, traceback, request=None, config=None):
 
-	description = "Process:\n```{}```\n".format(GetProcessInfo())
+	description = "Process:\n```{}```\n".format(GetProcessInfo(request))
 	
 	if traceback:
-		description += "\n\nTraceback:\n```{}```".format(traceback)
+		description += "\n\nTraceback:\n```lang=python\n{}```".format(traceback)
 
 	if config:
-		description += "\n\nConfig:\n```{}```".format(pprint.pformat(config))
+		description += "\n\nConfig:\n```lang=python\n{}```".format(pprint.pformat(config))
 
 	if request is not None and isinstance(request, HttpRequest):
 
-		description += "\n\nMETA:\n```{}```".format(pprint.pformat(request.META))
+		description += "\n\nMETA:\n```lang=python\n{}```".format(pprint.pformat(request.META))
 		if request.POST:
-			description += "\n\nPOST:\n```{}```".format(pprint.pformat(request.POST))
+			description += "\n\nPOST:\n```lang=python\n{}```".format(pprint.pformat(request.POST))
 		if request.COOKIES:
-			description += "\n\nCOOKIES:\n```{}```".format(pprint.pformat(request.COOKIES))
+			description += "\n\nCOOKIES:\n```lang=python\n{}```".format(pprint.pformat(request.COOKIES))
 
 	description += "\n\nBug hash: `{}`".format(key)
 
