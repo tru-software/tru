@@ -7,6 +7,7 @@ import os
 import re
 import sys
 import datetime
+import textwrap
 
 try:
 	import urllib.request
@@ -318,7 +319,7 @@ class HTMLHelpers(object):
 
 	@staticmethod
 	def PrettySize(size):
-		for x, y in [ ('bajtów',0),('KB',0),('MB',2),('GB',2)]:
+		for x, y in [('bajtów', 0), ('KB', 0), ('MB', 2), ('GB', 2)]:
 			if size < 200.0 and size > -200.0:
 				if size == int(size):
 					y = 0
@@ -327,10 +328,8 @@ class HTMLHelpers(object):
 		return "%3.1f%s" % (size, 'TB')
 
 	@staticmethod
-	def Ellipsis(text, max_len=30):
-		if len(text) > max_len:
-			return text[:max_len] + "..."
-		return text
+	def Ellipsis(text, max_len=30, placeholder="..."):
+		return textwrap.shorten(text, width=max_len, placeholder=placeholder)
 
 	@staticmethod
 	def FormBegin(func, attr={}, **kwattr):
