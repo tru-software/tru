@@ -42,6 +42,7 @@ except NameError:
 
 # -------------------------------------------------------------------
 
+
 def Transform(source, ops):
 
 	if source.format == 'GIF':
@@ -166,7 +167,7 @@ class Operations(object):
 			else:
 				if img_w > self.w or img_h > self.h:
 					scale = max(float(img_w)/self.w, float(img_h)/self.h)
-					return (int(img_w//scale), int(img_h//scale))
+					return (int(img_w/scale), int(img_h/scale))
 
 			return (img_w, img_h)
 
@@ -183,11 +184,11 @@ class Operations(object):
 			if img_w > self.w or img_h > self.h:
 
 				if float(img_w)/img_h <= float(self.w)/self.h:
-					img = img.resize((self.w, int(img_h*self.w//img_w)), Image.ANTIALIAS)
+					img = img.resize((self.w, int(img_h*self.w/img_w)), Image.ANTIALIAS)
 					img_w, img_h = img.size
 					img = img.crop((int((img_w-self.w)/4), int((img_h-self.h)/2), int((img_w-self.w)/4+self.w), int((img_h-self.h)/2+self.h)))
 				else:
-					img = img.resize((int(img_w*self.h//img_h), self.h), Image.ANTIALIAS)
+					img = img.resize((int(img_w*self.h/img_h), self.h), Image.ANTIALIAS)
 					img_w, img_h = img.size
 					img = img.crop((int((img_w-self.w)/2), int((img_h-self.h)/4), int((img_w-self.w)/2+self.w), int((img_h-self.h)/4+self.h)))
 
@@ -208,14 +209,14 @@ class Operations(object):
 
 			if img_w > self.w or img_h > self.h:
 				scale = max(float(img_w)/self.w, float(img_h)/self.h)
-				img = img.resize((int(img_w//scale), int(img_h//scale)), Image.ANTIALIAS)
+				img = img.resize((int(img_w/scale), int(img_h/scale)), Image.ANTIALIAS)
 
 			return img
 
 		def GetFinalSize(self, img_w, img_h):
 			if img_w > self.w or img_h > self.h:
 				scale = max(float(img_w)/self.w, float(img_h)/self.h)
-				return (int(img_w//scale), int(img_h//scale))
+				return (int(img_w/scale), int(img_h/scale))
 			return (img_w, img_h)
 
 
@@ -307,7 +308,7 @@ class Operations(object):
 
 				frame = frame.resize( (int(im.size[0]*.9), int(im.size[1]*.9)), Image.ANTIALIAS)
 				w, h = frame.size
-				layer.paste(frame, ((im.size[0] - w) // 2, (im.size[1] - h) // 2))
+				layer.paste(frame, ( int((im.size[0] - w) / 2), int((im.size[1] - h) / 2)))
 				im = Image.composite(layer, im, layer)
 
 				layer = Image.new('RGBA', im.size, (0, 0, 0, 0))
@@ -321,7 +322,7 @@ class Operations(object):
 			h = int(mark.size[1] * ratio)
 			if ratio != 1.0:
 				mark = mark.resize((w, h), Image.ANTIALIAS)
-			layer.paste(mark, ((im.size[0] - w) // 2, (im.size[1] - h) // 2))
+			layer.paste(mark, (int((im.size[0] - w) / 2), int((im.size[1] - h) / 2)))
 
 			return Image.composite(layer, im, layer)
 
