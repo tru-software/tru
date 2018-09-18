@@ -46,18 +46,18 @@ def FormatDescription(key, traceback, request=None, config=None):
 	description = "Process:\n```{}```\n".format(GetProcessInfo(request))
 	
 	if traceback:
-		description += "\n\nTraceback:\n```lang=python\n{}```".format(traceback)
+		description += "\n\nTraceback:\n```lang=py3tb\n{}```".format(traceback)
 
 	if config:
-		description += "\n\nConfig:\n```lang=python\n{}```".format(pprint.pformat(config))
+		description += "\n\nConfig:\n```lang=python3\n{}```".format(pprint.pformat(config))
 
 	if request is not None and isinstance(request, HttpRequest):
 
-		description += "\n\nMETA:\n```lang=python\n{}```".format(pprint.pformat(request.META))
+		description += "\n\nMETA:\n```lang=python3\n{}```".format(pprint.pformat(request.META))
 		if request.POST:
-			description += "\n\nPOST:\n```lang=python\n{}```".format(pprint.pformat(request.POST))
+			description += "\n\nPOST:\n```lang=python3\n{}```".format(pprint.pformat(request.POST))
 		if request.COOKIES:
-			description += "\n\nCOOKIES:\n```lang=python\n{}```".format(pprint.pformat(request.COOKIES))
+			description += "\n\nCOOKIES:\n```lang=python3\n{}```".format(pprint.pformat(request.COOKIES))
 
 	description += "\n\nBug hash: `{}`".format(key)
 
