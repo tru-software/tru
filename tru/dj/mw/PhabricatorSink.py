@@ -37,8 +37,26 @@ hostname = socket.gethostname()
 
 
 def GetProcessInfo(request=None):
-	url = request.build_absolute_uri() if request else None
-	return 'PID: {} ({})\nHOST: {}\nVERSION: {} (svn: {})\nURL: {}'.format(os.getpid(), settings.SERVER_ID, hostname, version_number, version_svn_rev, url)
+	r = '';
+	r += 'PID: `{}` (`{}`)\nHOST: `{}`\nVERSION: `{}` (svn: `{}`)\n'.format(os.getpid(), settings.SERVER_ID, hostname, version_number, version_svn_rev)
+
+	if request is not None:
+		environ = request.environ if hasattr(request, 'environ') else {}
+		profile = request._cached_profile if hasattr(request, '_cached_profile') else None
+		META = request.META if hasattr(request, 'META') else {}
+		COOKIES = request.COOKIES if hasattr(request, 'COOKIES') else {}
+
+		r += 'URL: `%s`\nUSER_AGENT: `%s`\nUSER: `%s`\nREMOTE_ADDR: `%s`\nCURRENT_ENDPOINT: `%s`\nMETHOD: `%s`\nCOOKIES: `%s`\n' % (
+			request.build_absolute_uri(),
+			META.get('HTTP_USER_AGENT', 'NONE'),
+			profile,
+			META.get('REMOTE_ADDR', 'NONE'),
+			getattr(request, 'CURRENT_ENDPOINT', None),
+			getattr(request, 'method', None),
+			COOKIES
+		)
+
+	return r
 
 
 def FormatDescription(key, traceback, request=None, config=None):

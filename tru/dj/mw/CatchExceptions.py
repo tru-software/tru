@@ -5,9 +5,10 @@ import sys
 import re
 import datetime
 import time
-from django.conf import settings
 import logging
+import socket
 
+from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound, HttpResponseServerError, Http404
 from django.core import exceptions
 
@@ -22,8 +23,39 @@ from ...utils.backtrace import GetTraceback, FormatTraceback
 log = logging.getLogger(__name__)
 log_res = logging.getLogger('Resources')
 
-# TODO: Override django.core.handlers.exception.response_for_exception
+hostname = socket.gethostname()
 
+try:
+	import version
+	version_number, version_svn_rev = version.number, version.svn_rev
+except ImportError:
+	version_number, version_svn_rev = 0, 0
+
+
+def GetEnvInfo(request=None):
+	r = '';
+	r += 'PID: {} ({})\nHOST: {}\nVERSION: {} (svn: {})\n'.format(os.getpid(), settings.SERVER_ID, hostname, version_number, version_svn_rev)
+
+	if request is not None:
+		environ = request.environ if hasattr(request, 'environ') else {}
+		profile = request._cached_profile if hasattr(request, '_cached_profile') else None
+		META = request.META if hasattr(request, 'META') else {}
+		COOKIES = request.COOKIES if hasattr(request, 'COOKIES') else {}
+
+		r += 'URL: %s\nUSER_AGENT: %s\nUSER: %s\nREMOTE_ADDR: %s\nCURRENT_ENDPOINT: %s\nMETHOD: %s\nCOOKIES: %s\n' % (
+			request.full_url,
+			META.get('HTTP_USER_AGENT', 'NONE'),
+			profile,
+			META.get('REMOTE_ADDR', 'NONE'),
+			getattr(request, 'CURRENT_ENDPOINT', None),
+			getattr(request, 'method', None),
+			COOKIES
+		)
+
+	return r
+
+
+# TODO: Override django.core.handlers.exception.response_for_exception
 class CatchExceptions:
 
 	templates_path = settings.BASE_DIR_FRONTEND + '/static/http/'
@@ -60,7 +92,7 @@ class CatchExceptions:
 		except Http404 as e:
 
 			if settings.DEBUG:
-				self.GetLogger(request).error("\n%s\n" % (GetTraceback(request=request)))
+				self.GetLogger(request).exception(GetEnvInfo(request))
 				from django.views import debug
 				response = debug.technical_404_response(request, e)
 			else:
@@ -71,11 +103,10 @@ class CatchExceptions:
 
 		except TooLongRequestException as ex:
 			traceback = FormatTraceback()
-			log_res.error("TooLongRequestException: ('{}';  '{}'; '{}'):\n{}".format(
+			log_res.exception("TooLongRequestException: ('{}';  '{}'; '{}')".format(
 				request.META['REMOTE_ADDR'],
 				request.full_url,
 				request.META.get('HTTP_USER_AGENT', 'NONE'),
-				traceback,
 				)
 			)
 
@@ -90,11 +121,10 @@ class CatchExceptions:
 		except (OperationalError, DjangoOperationalError) as ex:
 
 			traceback = FormatTraceback()
-			log_res.error("OperationalError: ('{}';  '{}'; '{}'):\n{}".format(
+			log_res.exception("OperationalError: ('{}';  '{}'; '{}')".format(
 				request.META['REMOTE_ADDR'],
 				request.full_url,
 				request.META.get('HTTP_USER_AGENT', 'NONE'),
-				traceback,
 				)
 			)
 
@@ -109,19 +139,19 @@ class CatchExceptions:
 
 		except exceptions.PermissionDenied as pd:
 			if settings.DEBUG:
-				self.GetLogger(request).error("%s\nPermissionDenied Exception: %s" % (GetTraceback(request=request), pd))
+				self.GetLogger(request).exception(GetEnvInfo(request))
 			response = self._page403(request)
 			response.source_exc = pd
 			return response
 
 		except BotRequestException as ex:
-			self.GetLogger(request).info("%s\nBlocked bot: %s" % (GetTraceback(request=request), ex))
+			self.GetLogger(request).exception(GetEnvInfo(request))
 			response = self._page503(request, status=503)
 			response.skip_bug_report = True
 			return response
 			
 		except NotImplementedError as ex:
-			self.GetLogger(request).error("%s\nNotImplemented Exception: %s" % (GetTraceback(request=request), ex))
+			self.GetLogger(request).exception(GetEnvInfo(request))
 			return self._page500(request, status=503)
 
 		except SystemExit:
@@ -130,13 +160,7 @@ class CatchExceptions:
 		except Exception as ex:  # Handle everything else
 
 			traceback = FormatTraceback()
-			self.GetLogger(request).error("Exception: ('{}';  '{}'; '{}'):\n{}".format(
-				request.META['REMOTE_ADDR'],
-				request.full_url,
-				request.META.get('HTTP_USER_AGENT', 'NONE'),
-				traceback,
-				)
-			)
+			self.GetLogger(request).exception(GetEnvInfo(request))
 
 			#if settings.DEBUG:
 				#from django.views import debug

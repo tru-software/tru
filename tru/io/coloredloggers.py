@@ -9,6 +9,7 @@ from pygments.formatters import TerminalFormatter
 formatter = TerminalFormatter()
 lexer = get_lexer_by_name("pytb", stripall=True)
 
+
 class ColoredExceptionFormatter(logging.Formatter):
 	def formatException(self, exc_info):
 		result = super(ColoredExceptionFormatter, self).formatException(exc_info)
