@@ -4,10 +4,10 @@ import logging
 
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name
-from pygments.formatters import TerminalFormatter
+from pygments.formatters import Terminal256Formatter
 
-formatter = TerminalFormatter()
-lexer = get_lexer_by_name("pytb", stripall=True)
+formatter = Terminal256Formatter()
+lexer = get_lexer_by_name("py3tb", stripall=True)
 
 
 class ColoredExceptionFormatter(logging.Formatter):

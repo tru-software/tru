@@ -18,7 +18,7 @@ def _make_str(x):
 	return x if isinstance(x, str) else x.decode('UTF8')
 
 def FormatTraceback():
-	return '\n'.join(map(_make_str, traceback.format_exception(*sys.exc_info())))
+	return ''.join(map(_make_str, traceback.format_exception(*sys.exc_info())))
 
 def GetTraceback(exception=None, request=None):
 	r = '';
