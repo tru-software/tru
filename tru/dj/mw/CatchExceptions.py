@@ -65,6 +65,7 @@ class CatchExceptions:
 	def __init__(self, func):
 		self.func = func
 
+		self._page400 = self._load('400.html', status=400)  # HttpResponseBadRequest
 		self._page403 = self._load('403.html', status=403)  # HttpResponseForbidden
 		self._page404 = self._load('404.html', status=404)  # HttpResponseNotFound
 		self._page500 = self._load('500.html', status=500)  # HttpResponseServerError
@@ -89,6 +90,12 @@ class CatchExceptions:
 	def __call__(self, request):
 		try:
 			return self.func(request)
+
+		except exceptions.DisallowedHost as ex:
+			self.GetLogger(request).exception(GetEnvInfo(request))
+			response = self._page400(request)
+			return response
+
 		except Http404 as e:
 
 			if settings.DEBUG:
