@@ -24,7 +24,7 @@ HttpRequest.full_url_protocol = LazyFullURLProtocol()
 
 
 # echo 'from tru.dj.django_helpers import ProcessRequest; print(ProcessRequest("https://wre.pl:8000/"))' | ./manage.py shell
-def ProcessRequest(url, method='GET', POST=None, headers={}):
+def ProcessRequest(url, method='GET', POST=None, headers={}, cookies={}):
 	from django.test import RequestFactory
 	request_factory = RequestFactory()
 
@@ -42,11 +42,16 @@ def ProcessRequest(url, method='GET', POST=None, headers={}):
 
 	if method == 'GET':
 		query = parse_qsl(url_parts.query)
-		return handler.get_response(request_factory.get(url_parts.path, query, **headers))
+		request = request_factory.get(url_parts.path, query, **headers);
 	elif method == 'POST':
-		return handler.get_response(request_factory.post(url_parts.path, POST, **headers))
+		request = request_factory.post(url_parts.path, POST, **headers);
 	else:
 		raise ValueError("Unsupported method type: {}".format(method))
+	
+	for k,v in cookies.items():
+		request.COOKIES[k] = v
+	
+	return handler.get_response(request)
 
 
 from urllib.parse import urlencode
