@@ -9,9 +9,11 @@ import logging
 from .CatchExceptions import CatchExceptions
 
 
-class StatsMiddleware:
+class ResourcesMonitorMiddleware:
 
-	_last_max_update = int(time.time())
+	WARN_LIMIT = 20.0
+
+	_last_max_update = time.time()
 	_requests_counter = 0
 	_requests_counter_total = 0
 
@@ -27,15 +29,15 @@ class StatsMiddleware:
 
 	def __call__(self, request):
 
-		proces_begin = time.time()
-		request._proces_begin = proces_begin
+		request_begin = time.time()
+		request._request_begin = request_begin
 
 		stats = self.__class__
 
-		stats._requests_counter_total += 1
 		stats._requests_counter += 1
-
+		stats._requests_counter_total += 1
 		request._request_id = stats._requests_counter_total
+
 
 		memory_usage_begin = None
 		if stats._mem_diff:
@@ -43,20 +45,22 @@ class StatsMiddleware:
 
 		response = self.get_response(request)
 
-		if memory_usage_begin:
+		request_end = time.time()
+
+		if memory_usage_begin is not None:
 			memory_usage_end = resource.getrusage(resource.RUSAGE_SELF)
 			# http://linux.die.net/man/2/getrusage
 			if memory_usage_end.ru_maxrss - memory_usage_begin.ru_maxrss > 20*1024:
-				log_stats.warn("{}: Memory diff {} -> {} during request {}".format(settings.SERVER_ID, memory_usage_begin.ru_maxrss, memory_usage_end.ru_maxrss, request.full_url))
+				log_stats.warn("{}: Memory diff {} -> {} during request {}".format(settings.SERVER_ID, memory_usage_begin.ru_maxrss, memory_usage_end.ru_maxrss, request.build_absolute_uri()))
 
-		diff = time.time() - proces_begin
+		diff = request_end - request_begin
 
-		if diff >= 20.0:
+		if diff >= self.WARN_LIMIT:
 
 			self.log.warn("{}: Too long request {} \nURL: {}\nOther requests number: {}\nRU diff: {}\nENDPOINT: {}\nPOST: {}\nMETA: {}\n".format(
 					settings.SERVER_ID,
 					diff,
-					request.full_url,
+					request.build_absolute_uri(),
 					stats._requests_counter_total - request._request_id,
 					{i: getattr(memory_usage_end, i) - getattr(memory_usage_begin, i) for i in self.ru_fields} if memory_usage_begin else '',
 					getattr(request, 'MAIN_ENDPOINT', '<UNKNOWN>'),
@@ -75,7 +79,7 @@ class StatsMiddleware:
 	@classmethod
 	def current_performance(cls):
 
-		now = int(time.time())
+		now = time.time()
 		try:
 			diff = now - cls._last_max_update
 			if diff >= 15.0 or diff == 0:
