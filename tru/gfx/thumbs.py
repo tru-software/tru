@@ -477,25 +477,38 @@ def ImageExternalOpt(image_path):
 		os.remove(output)
 
 	org_size = os.path.getsize(image_path)
+	pargs = None
 
 	if mimetype == 'image/png':
-		process = subprocess.Popen(['pngquant', '--quality', '60-80', '--speed', '3', '--output', output, image_path], stdout=subprocess.PIPE)
+		pargs = ['pngquant', '--quality', '60-80', '--speed', '3', '--output', output, image_path]
+		process = subprocess.Popen(pargs, stdout=subprocess.PIPE)
 	elif mimetype == 'image/jpeg':
 		shutil.copyfile(image_path, output)
-		process = subprocess.Popen(['jpegoptim', '-qso', '-m90', output], stdout=subprocess.PIPE)
+		pargs = ['jpegoptim', '-qso', '-m90', output]
+		process = subprocess.Popen(pargs, stdout=subprocess.PIPE)
 	elif mimetype == 'image/gif':
-		process = subprocess.Popen(['gifsicle', '-b', '-O3', '-o', output, image_path], stdout=subprocess.PIPE)
+		pargs = ['gifsicle', '-b', '-O3', '-o', output, image_path]
+		process = subprocess.Popen(pargs, stdout=subprocess.PIPE)
 	else:
 		raise ValueError('Unsupported image type "{}": "{}"'.format(mimetype, image_path))
 
 	# process.returncode
 	process.wait()
-	
-	# If conversion results in quality below the min quality the image won't be saved 
-	# (or if outputting to stdin, 24-bit original will be output) 
-	# and pngquant will exit with status code Er 99 
-	if mimetype == 'image/png' and process.returncode == 99:
-		return (org_size, org_size)
+
+	if mimetype == 'image/png':
+		if process.returncode == 99:
+			# If conversion results in quality below the min quality the image won't be saved 
+			# (or if outputting to stdin, 24-bit original will be output) 
+			# and pngquant will exit with status code Er 99 
+			return (org_size, org_size)
+		elif process.returncode == 25:
+			# 25 => LIBPNG_FATAL_ERROR
+			# https://github.com/kornelski/pngquant/blob/1f5344c996e392684c08fe351f44693f21792f38/rwpng.c#L201
+			# fatal libpng error (via longjmp() - an exception from libpng)
+			# means libpng cannot read the file.
+			log.warn("ImageExternalOpt: calling {} failed with code {}".format(pargs, process.returncode))
+			return (org_size, org_size)
+
 
 	if not os.path.isfile(output):
 		raise ValueError('Cannot opt image ({}): "{}" -> "{}"'.format(process.returncode, image_path, output))
