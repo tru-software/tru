@@ -9,6 +9,7 @@ import time
 import zlib
 import hashlib
 import ctypes
+import random
 
 from ..io import converters
 
@@ -200,17 +201,19 @@ CreateCrcLink = CreateCrcLinkMD5
 
 class TmpFile:
 	def __init__ (self, filepath, mode='wb', perms=None):
+
 		self.filepath = filepath
-
+		self.filepath_tmp = filepath + '.RND{}.tmp'.format(random.randrange(0xffffffff))
 		os.makedirs(os.path.dirname(filepath), exist_ok=True)
-
-		self.f = open(filepath + '.tmp', mode=mode)
+		self.f = open(self.filepath_tmp, mode=mode)
 		self.perms = perms
+
 	def __enter__ (self):
 		return self.f
+
 	def __exit__ (self, exc_type, exc_value, traceback):
 		self.f.close()
-		tmp = self.filepath+'.tmp'
+		tmp = self.filepath_tmp
 		if exc_type is None:
 			if self.perms is not None:
 				os.chmod(tmp, self.perms)
