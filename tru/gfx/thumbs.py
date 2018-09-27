@@ -464,7 +464,7 @@ CreateThumb.OnNewImage = []
 def ImageExternalOpt(image_path):
 
 	if not os.path.isfile(image_path):
-		raise ValueError('Not such file: "{}"'.format(image_path))
+		raise ValueError('No such file: "{}"'.format(image_path))
 
 	mimetype, encoding = mimetypes.guess_type(image_path)
 	mimetype = mimetype or 'unknown'
