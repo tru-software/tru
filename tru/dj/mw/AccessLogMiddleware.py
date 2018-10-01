@@ -95,12 +95,14 @@ def AccessLogMiddleware(get_response):
 			if settings.DEBUG:
 				stats = ' '.join(request.stats.GetParts('\033[90mT\033[0m=\033[91m{:.4f}\033[0m', '\033[90m{}\033[0m=\033[93m{}\033[0m/\033[91m{:.4f}\033[0m'))
 
-				if response.status_code > 400:
-					status = '\033[91m{}\033[0m'.format(status)
+				log_func = log_access.info
+				if response.status_code >= 400:
+					status = '\033[01m\033[41m\033[97m{}\033[0m'.format(status)
+					log_func = log_access.error
 				else:
 					status = '\033[92m{}\033[0m'.format(status)
 
-				log_access.info('\033[93m[%s\033[93m] \033[95m%s\033[0m \033[94m%s\033[0m %s' % (stats, request.method, request.full_url, status))
+				log_func('\033[93m[%s\033[93m] \033[95m%s\033[0m \033[94m%s\033[0m %s' % (stats, request.method, request.full_url, status))
 			elif getattr(response, 'suppress_access_log', False) is not True:
 
 				stats = ' '.join(request.stats.GetParts('T={:.4f}', '{}={}/{:.4f}'))
