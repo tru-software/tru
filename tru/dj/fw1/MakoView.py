@@ -10,6 +10,7 @@ import json
 
 from mako.lookup import TemplateLookup
 from mako import runtime as mako_runtime, filters, util as mako_util
+from markupsafe import Markup
 
 from django.http import HttpResponse
 # from django.core.hanlders import WSGIRequest
@@ -171,7 +172,7 @@ class MakoView(IView):
 	def _build_std_env(self, env, request, parent_context=None):
 
 		env['py2js'] = lambda x: json.dumps(x)
-		env['nl2br'] = lambda x: x.replace('\n', '<br/>').replace('\r', '\n')
+		env['nl2br'] = lambda x: Markup(str(x).replace('\n', '<br/>').replace('\r', '\n'))
 		# env['WebApps'] = WebAppsHelper
 		env['_'] = ugettext
 		env['HTML'] = html_helpers.HTMLHelpers

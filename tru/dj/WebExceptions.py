@@ -2,6 +2,7 @@
 
 from django.http import HttpResponse
 import json
+import copy
 
 
 class RequestException(Exception):
@@ -15,6 +16,9 @@ class RequestException(Exception):
 	def serialize(self):
 		d = {'type': self.__class__.__name__, 'msg': str(self)}
 		return d
+
+	def clone(self, ns=None):
+		return copy.copy(self)
 
 WebException = RequestException
 
@@ -35,6 +39,12 @@ class InputException(RequestException):
 		if self.msg_html:
 			d['msg_html'] = self.msg_html
 		return d
+
+	def clone(self, ns=None):
+		input_name = ns + '.' + self.input_name if ns else self.input_name
+		n = InputException(input_name, str(self), self.help, self.msg_html)
+
+		return n
 
 
 class InternalException(RequestException):
@@ -154,11 +164,14 @@ class ErrorsList(RequestException):
 		return bool(self._exc)
 
 	def __iadd__(self, other):
+		self.extend(other)
+		return self
 
-		if isinstance(other, ErrorsList):
-			self._exc.extend(other._exc)
-		elif other:
-			self._exc.append(other)
+	def extend(self, other, ns=None):
+
+		if other:
+			exc = other._exc if isinstance(other, ErrorsList) else [other]
+			self._exc.extend(i.clone(ns) for i in exc)
 
 		return self
 
@@ -170,3 +183,8 @@ class ErrorsList(RequestException):
 
 	def serialize(self):
 		return [i.serialize() for i in self._exc]
+
+	def clone(self, ns=None):
+		n = ErrorsList()
+		n._exc = [i.clone(ns) for i in self._exc]
+		return n
