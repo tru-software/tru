@@ -10,7 +10,7 @@ def IsValidEmail(email):
 	return bool(email_re.match(email))
 
 
-postcode_re = re.compile("^[0-9]{3}\-[0-9]{2}$")
+postcode_re = re.compile("^[0-9]{2}\-[0-9]{3}$")
 def IsValidPostcode(postcode):
 	return bool(postcode_re.match(postcode))
 

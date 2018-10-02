@@ -18,7 +18,7 @@ class RequestException(Exception):
 
 WebException = RequestException
 
-class InputException(WebException):
+class InputException(RequestException):
 	"""
 		Użytkownik wpisał złą wartość w jakimś polu <input />
 	"""
@@ -37,7 +37,7 @@ class InputException(WebException):
 		return d
 
 
-class InternalException(WebException):
+class InternalException(RequestException):
 	"""
 		Brakuje jakiś danych, coś się źle wczytało itp.
 	"""
@@ -46,7 +46,7 @@ class InternalException(WebException):
 		super(InternalException, self).__init__(msg, help)
 
 
-class AccessException(WebException):
+class AccessException(RequestException):
 	"""
 		Użytkownik nie ma praw, albo coś w tym rodzaju.
 	"""
@@ -60,7 +60,7 @@ class AccessException(WebException):
 		else:
 			super(AccessException, self).__init__(profile, help)
 
-class ExpireSessionException(WebException):
+class ExpireSessionException(RequestException):
 	"""
 		Użytkownikowi skonczyła się sesja.
 	"""
@@ -68,7 +68,7 @@ class ExpireSessionException(WebException):
 		super(ExpireSessionException, self).__init__(msg, help)
 
 
-class LogicException(WebException):
+class LogicException(RequestException):
 	"""
 		Operacja nie ma sensu.
 	"""
@@ -125,7 +125,7 @@ class JSONResponse(object):
 		return response
 
 
-class AuthException(WebException, JSONResponse):
+class AuthException(RequestException, JSONResponse):
 
 	def __init__(self, error, description):
 		super(AuthException, self).__init__(description)
@@ -143,3 +143,30 @@ class BotRequestException(Exception):
 	def __init__(self, msg=''):
 		super().__init__(msg)
 
+
+class ErrorsList(RequestException):
+
+	def __init__(self):
+		super().__init__(None)
+		self._exc = []
+
+	def __bool__(self):
+		return bool(self._exc)
+
+	def __iadd__(self, other):
+
+		if isinstance(other, ErrorsList):
+			self._exc.extend(other._exc)
+		elif other:
+			self._exc.append(other)
+
+		return self
+
+	def __contains__(self, item):
+		for i in self._exc:
+			if isinstance(i, InputException) and i.input_name == item:
+				return True
+		return False
+
+	def serialize(self):
+		return [i.serialize() for i in self._exc]
