@@ -151,25 +151,11 @@ class SuccessResponse(Przelewy24):
 
 		log.info("Payment verification: checking text: {}".format(repr(content)))
 
-		try:
-			lines = iter(content.splitlines())
-			while True:
-				line = next(lines).strip()
-				if line == 'RESULT':
-					break
+		if content.strip() == 'error=0':
+			return True
 
-			line = next(lines).strip()
-
-			if line == 'TRUE':
-				return True
-			elif line == 'ERR':
-				error_code = next(lines).strip()
-				message = next(lines).strip()
-				raise VerifyErrorException(error_code, message)
-		except StopIteration:
-			pass
-
-		raise VerifyContentException( 'Niezrozumiała odpowiedź: {}'.format(repr(content)) )
+		# error={KOD_BŁĘDU}&errorMessage=field1:desc1&field1:desc2
+		raise VerifyErrorException('ERROR', content)
 
 	def GetOrderId(self):
 		return self.order_id
