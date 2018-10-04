@@ -45,23 +45,34 @@ class Przelewy24(object):
 		list(netaddr.iter_iprange('91.216.191.181', '91.216.191.185'))  # 91.216.191.181/32  91.216.191.182/31  91.216.191.184/31
 	]
 
+	def __init__(self, merchant_id, crc):
+		self.PRZELEWY24_ID = merchant_id
+		self.PRZELEWY24_CRC = crc
 
 	def CRC(self, *fields):
 		# print '|'.join(map(str, fields+(self.PRZELEWY24_CRC,) ))
 		return hashlib.md5(('|'.join(map(str, fields+(self.PRZELEWY24_CRC,))).encode('utf8'))).hexdigest()
 
+	@classmethod
+	def VerifyRemoteAddr(cls, addr):
+		addr = netaddr.IPAddress(addr)
+		for i in cls.PRZELEWY24_ADDRS:
+			if addr in i:
+				return True
+		return False
+
 
 class PaymentForm(Przelewy24):
 
-	def __init__(self, merchant_id, crc, description, payment, url_return, url_cancel):
+	def __init__(self, merchant_id, crc, description, payment, url_return, url_cancel, url_cb):
+		super().__init__(merchant_id, crc)
 
-		self.PRZELEWY24_ID = merchant_id
-		self.PRZELEWY24_CRC = crc
 		self.description = description
 		self.session_key = payment.session_key
 		self.email = payment.owner_email
 		self.url_return = url_return
 		self.url_cancel = url_cancel
+		self.url_cb = url_cb
 		self.price = payment.price
 
 	def GetURL(self):
@@ -81,6 +92,7 @@ class PaymentForm(Przelewy24):
 			"p24_country"     : "PL",
 			"p24_url_return"  : self.url_return,
 			"p24_url_cancel"  : self.url_cancel,
+			"p24_url_status"  : self.url_cb,
 			"p24_encoding"    : "UTF-8",
 			"p24_sign"        : self.CRC(self.session_key, self.PRZELEWY24_ID, self.price, 'PLN'),
 		}
@@ -88,9 +100,8 @@ class PaymentForm(Przelewy24):
 
 class SuccessResponse(Przelewy24):
 
-	def __init__(self, P):
-
-		super(SuccessResponse, self).__init__()
+	def __init__(self, merchant_id, crc, P):
+		super().__init__(merchant_id, crc)
 
 		# print "Otrzymane dane: {}".format(P)
 		# print "Scalone dane: {}".format( '|'.join(map(str, (P['p24_session_id'], P['p24_order_id'], P['p24_amount'], P['p24_currency'], self.PRZELEWY24_CRC) )) )
@@ -120,25 +131,25 @@ class SuccessResponse(Przelewy24):
 			"p24_amount"      : payment.price,
 			"p24_currency"    : 'PLN',
 			"p24_order_id"    : self.order_id,
-			"p24_sign"        : self.CRC( self.session_key, self.order_id, payment.price, 'PLN')
+			"p24_sign"        : self.CRC(self.session_key, self.order_id, payment.price, 'PLN')
 		}
 
-		log.info( "Payment verification: {}: {}".format( self.PRZELEWY24_URL + '/trnVerify', data)  )
+		log.info("Payment verification: {}: {}".format( self.PRZELEWY24_URL + '/trnVerify', data))
 		try:
-			response = requests.post( self.PRZELEWY24_URL + '/trnVerify', data=data, verify=True )
+			response = requests.post(self.PRZELEWY24_URL + '/trnVerify', data=data, verify=True)
 		except requests.exceptions.RequestException as ex:
 			log.error( "Payment verification: connection problem: {}".format(ex))
-			raise VerifyConnectionException( 'Nie można połączyć w celu weryfikacji {}'.format(ex) )
+			raise VerifyConnectionException('Nie można połączyć w celu weryfikacji {}'.format(ex))
 
-		log.info( "Payment verification: Got response: {}".format(response.status_code))
+		log.info("Payment verification: Got response: {}".format(response.status_code))
 
 		if response.status_code != 200:
 			log.error( "Payment verification: invalid response: {}: {}".format(response.status_code, response.content))
-			raise VerifyContentException( 'Nieprawidłowa odpowiedź: {}: {}'.format(response.status_code, response.content) )
+			raise VerifyContentException('Nieprawidłowa odpowiedź: {}: {}'.format(response.status_code, response.content))
 
 		content = response.text
 
-		log.info( "Payment verification: checking text: {}".format(repr(content)))
+		log.info("Payment verification: checking text: {}".format(repr(content)))
 
 		try:
 			lines = iter(content.splitlines())
