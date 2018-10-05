@@ -103,7 +103,7 @@ def ReportToPhabricator(endpoint_hash, title, description, conduit_gateway=None)
 			#'dependsOnTaskPHIDs': []
 		#}>
 
-		log.warn("Phabricator task created: {} {}".format(task['objectName'], task['uri']))
+		log.warning("Phabricator task created: {} {}".format(task['objectName'], task['uri']))
 		created = datetime.datetime.now()
 		with redis_conn.pipeline() as pipe:
 			pipe.set(key, json.dumps({"task": task['objectName'], "created": converters.datetime2json(created)}))

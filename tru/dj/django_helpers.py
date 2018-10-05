@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import json
+from urllib.parse import urlencode
+
+from django.urls import reverse
 from django.http import HttpRequest
+from django.test.client import MULTIPART_CONTENT
 
 
 class LazyFullURL(object):
@@ -24,7 +29,7 @@ HttpRequest.full_url_protocol = LazyFullURLProtocol()
 
 
 # echo 'from tru.dj.django_helpers import ProcessRequest; print(ProcessRequest("https://wre.pl:8000/"))' | ./manage.py shell
-def ProcessRequest(url, method='GET', POST=None, headers={}, cookies={}):
+def ProcessRequest(url, method='GET', POST=None, headers={}, cookies={}, content_type=None):
 	from django.test import RequestFactory
 	request_factory = RequestFactory()
 
@@ -44,7 +49,7 @@ def ProcessRequest(url, method='GET', POST=None, headers={}, cookies={}):
 		query = parse_qsl(url_parts.query)
 		request = request_factory.get(url_parts.path, query, **headers);
 	elif method == 'POST':
-		request = request_factory.post(url_parts.path, POST, **headers);
+		request = request_factory.post(url_parts.path, POST, content_type=content_type or MULTIPART_CONTENT,  **headers);
 	else:
 		raise ValueError("Unsupported method type: {}".format(method))
 	
@@ -54,8 +59,13 @@ def ProcessRequest(url, method='GET', POST=None, headers={}, cookies={}):
 	return handler.get_response(request)
 
 
-from urllib.parse import urlencode
-from django.urls import reverse
+def ProcessRequestJSON(url, data, method='POST', **kwargs):
+	response = ProcessRequest(url, method=method, POST=data, content_type='application/json', **kwargs)
+
+	if response['Content-Type'].startswith('application/json'):
+		return json.loads(response.content)
+
+	return response
 
 
 class URLGenerator:
