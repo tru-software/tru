@@ -147,7 +147,7 @@ class SuccessResponse:
 			log.error( "Payment verification: invalid response: {}: {}".format(response.status_code, response.content))
 			raise VerifyContentException('Nieprawidłowa odpowiedź: {}: {}'.format(response.status_code, response.content))
 
-		return resonse.content
+		return response.content
 
 	def Verify(self, payment):
 
