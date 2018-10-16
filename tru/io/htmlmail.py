@@ -42,7 +42,11 @@ class MailImageCollector:
 		self._cid    = 0
 
 	def get_images(self):
-		return list(self._images.items())
+		for k, v in self._images.items():
+			if isinstance(v, tuple):
+				yield (k, ) + v
+			else:
+				yield (k, v)
 
 	def __call__(self, image_file_name):
 
@@ -54,7 +58,7 @@ class MailImageCollector:
 		if abs_path in self._images:
 			return self._images[abs_path]
 
-		if not os.path.isfile( abs_path ):
+		if not os.path.isfile(abs_path):
 			return ''
 
 		self._cid = self._cid + 1
@@ -140,9 +144,15 @@ def send_html_mail(subject, html_content, text_content, to_, from_=settings.EMAI
 
 	if images:
 		for img in images:
-			with open(img[0], 'rb') as fp:
-				msgImage = MIMEImage(fp.read())
-				msgImage.add_header('Content-ID', '<'+img[1]+'>')
+			if len(img) == 2:
+				path, cid = img
+				mimetype = None
+			else:
+				path, mimetype, cid = img
+			with open(path, 'rb') as fp:
+				subtype = (mimetype.split('/')[1] if '/' in mimetype else mimetype) if mimetype else None
+				msgImage = MIMEImage(fp.read(), _subtype=subtype)
+				msgImage.add_header('Content-ID', '<'+cid+'>')
 				msgRoot.attach(msgImage)
 
 	if files:
