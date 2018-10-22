@@ -10,6 +10,8 @@ import zlib
 import hashlib
 import ctypes
 import random
+import shutil
+from pathlib import Path
 
 from ..io import converters
 
@@ -223,6 +225,51 @@ class TmpFile:
 				os.remove(tmp)
 			except IOError:
 				pass
+		return False
+
+# -------------------------------------------------------------------------------
+
+
+
+class TmpDir:
+	def __init__ (self, base_dir, perms=None):
+
+		self.base_dir = base_dir
+		self.base_dir_tmp = '{}.RND{}.tmp'.format(str(base_dir).rstrip('/'), random.randrange(0xffffffff))
+		self.perms = perms
+
+		if os.path.exists(self.base_dir_tmp):
+			raise IOError(f"Cannot create tmp dir under {self.base_dir_tmp}")
+
+		os.makedirs(self.base_dir_tmp, exist_ok=True)
+		os.chmod(self.base_dir_tmp, 0o700)
+
+	def __enter__ (self):
+		return Path(self.base_dir_tmp)
+
+	def __exit__ (self, exc_type, exc_value, traceback):
+
+		if exc_type is None:
+			if self.perms is not None:
+				os.chmod(self.base_dir_tmp, self.perms)
+
+			new_tmp = '{}.RND{}.tmp'.format(str(self.base_dir).rstrip('/'), random.randrange(0xffffffff))
+
+			if os.path.exists(new_tmp):
+				raise IOError(f"Cannot create tmp dir under {new_tmp}")
+
+			if os.path.exists(self.base_dir):
+				os.rename(self.base_dir, new_tmp)
+				os.rename(self.base_dir_tmp, self.base_dir)
+				shutil.rmtree(new_tmp)
+			else:
+				os.rename(self.base_dir_tmp, self.base_dir)
+		else:
+			try:
+				shutil.rmtree(self.base_dir_tmp)
+			except IOError:
+				log.warn(f"TmpDir: cannot remove tmp dir {self.base_dir_tmp}")
+
 		return False
 
 # -------------------------------------------------------------------------------

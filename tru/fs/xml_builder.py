@@ -17,7 +17,7 @@ class XMLBuilder(xmlwitch.Builder):
 		pass
 
 	def __init__(self, filepath, **kwargs):
-		self.filepath = filepath
+		self.filepath = str(filepath)
 		self.mtime = None
 		xmlwitch.Builder.__init__(self, **kwargs)
 
