@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from django.http import HttpResponse
+from contextlib import contextmanager
 import json
 import copy
+
+from django.http import HttpResponse
 
 
 class RequestException(Exception):
@@ -188,3 +190,20 @@ class ErrorsList(RequestException):
 		n = ErrorsList()
 		n._exc = [i.clone(ns) for i in self._exc]
 		return n
+
+	@contextmanager
+	def try_validate(self):
+		try:
+			yield
+		except RequestException as ex:
+			self += ex
+
+	sucess_response = {
+		'success': True
+	}
+	def get_json(self):
+		if self._exc:
+			return {
+				'errors': self.serialize()
+			}
+		return self.sucess_response
