@@ -19,6 +19,11 @@ class RequestException(Exception):
 		d = {'type': self.__class__.__name__, 'msg': str(self)}
 		return d
 
+	def get_json(self):
+		return {
+			'errors': [self.serialize()]
+		}
+
 	def clone(self, ns=None):
 		return copy.copy(self)
 
