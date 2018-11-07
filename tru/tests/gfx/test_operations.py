@@ -86,6 +86,22 @@ def test_Watermark_img():
 	pat = Image.open("tests/gfx/op/linux Watermark watermark.png")
 	assert cmp_image(res, pat)
 
+	# test with frame also
+	assert 0
+
+def test_RotateImage_img():
+
+	# exiftool -Orientation -n img.png
+	# exiftool -Orientation=8 -n img.png
+	# convert img.png -auto-orient out.png
+
+	pat = Image.open("tests/gfx/op/linux.png")
+	for i in range(1,9):
+		print("INFO: exif-orientation {}".format(i))
+		img = Image.open("tests/gfx/op/linux exif-orientation-{}.png".format(i))
+		res = Operations.RotateImage()(img)
+		res.save("tests/gfx/tmp/linux exif-orientation-{} RotateImage.png".format(i))
+		assert cmp_image(res, pat)
 
 
 def test_FitWidth_dim():
@@ -229,11 +245,3 @@ def test_Manual_dim():
 
 			test_operation(img, w, h, crop)
 
-"""
-TODO:
-	Manual
-	Operations.Contrast(val)
-	Operations.Brightness(val)
-	Operations.Watermark(center,frame)
-	Operations.RotateImage    # apply exif rotation
-"""
