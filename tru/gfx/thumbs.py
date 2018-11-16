@@ -93,6 +93,19 @@ def Transform(source, ops):
 
 # -------------------------------------------------------------------
 
+class FakeImage:
+	""" For size calculations """
+	def __init__(self, size):
+		self.size = size
+
+	def resize(self, dim, *args, **kwargs):
+		return FakeImage(dim)
+
+	def crop(self, c):
+		x0,y0,x1,y1 = c
+		return FakeImage((max(x1 - x0, 1), max(y1 - y0, 1)))
+
+
 class Operations(object):
 
 	class Base(object):
@@ -138,8 +151,13 @@ class Operations(object):
 
 
 	class FitWidth(TransformSize):
+		""" Result image width <= given width
+			Preserve aspect ratio
+			Downscale only (noop otherwise)
+		"""
 
 		def Exec(self, img):
+
 
 			if not self.w:
 				return img
@@ -157,22 +175,12 @@ class Operations(object):
 			return img
 
 		def GetFinalSize(self, img_w, img_h):
-
-			if not self.w:
-				return (img_w, img_h)
-
-			if not self.h:
-				if img_w > self.w:
-					return (self.w, int(img_h*self.w/img_w))
-			else:
-				if img_w > self.w or img_h > self.h:
-					scale = max(float(img_w)/self.w, float(img_h)/self.h)
-					return (int(img_w/scale), int(img_h/scale))
-
-			return (img_w, img_h)
+			return self.Exec(FakeImage((img_w, img_h))).size
 
 
 	class FitAll(TransformSize):
+		""" Resize to fit with crop
+		"""
 
 		def Exec(self, img):
 
@@ -195,11 +203,14 @@ class Operations(object):
 			return img
 
 		def GetFinalSize(self, img_w, img_h):
-			return (min(self.w, img_w), min(self.h, img_h))
+			return self.Exec(FakeImage((img_w, img_h))).size
 
 
 	class MaxBox(TransformSize):
-
+		""" Result image fits inside given size
+			Preserve aspect ratio
+			Downscale only (noop otherwise)
+		"""
 		def Exec(self, img):
 
 			if not self.w or not self.h:
@@ -208,19 +219,31 @@ class Operations(object):
 			img_w, img_h = img.size
 
 			if img_w > self.w or img_h > self.h:
-				scale = max(float(img_w)/self.w, float(img_h)/self.h)
-				img = img.resize((int(img_w/scale), int(img_h/scale)), Image.ANTIALIAS)
+
+				scale_w = float(self.w) / img_w
+				scale_h = float(self.h) / img_h
+
+				if scale_w < scale_h:
+					new_w = self.w
+					new_h = float(img_h) * scale_w
+				else:
+					new_w = float(img_w) * scale_h
+					new_h = self.h
+
+				new_size = int(max(new_w, 1)), int(max(new_h, 1))
+				img = img.resize(new_size, Image.ANTIALIAS)
 
 			return img
 
 		def GetFinalSize(self, img_w, img_h):
-			if img_w > self.w or img_h > self.h:
-				scale = max(float(img_w)/self.w, float(img_h)/self.h)
-				return (int(img_w/scale), int(img_h/scale))
-			return (img_w, img_h)
+			return self.Exec(FakeImage((img_w, img_h))).size
 
 
 	class Force(TransformSize):
+		""" Result image size <= given size
+			Ignore aspect ratio
+			Downscale only (noop otherwise)
+		"""
 
 		def Exec(self, img):
 
@@ -235,10 +258,14 @@ class Operations(object):
 			return img
 
 		def GetFinalSize(self, img_w, img_h):
-			return (min(self.w, img_w), min(self.h, img_h))
+			return self.Exec(FakeImage((img_w, img_h))).size
 
 
 	class Manual(TransformSize):
+		""" Resize and crop
+			Ignore aspect ratio
+			Up and down scale
+		"""
 
 		def __init__(self, width, height, crop):
 			self.w = width
@@ -262,10 +289,10 @@ class Operations(object):
 			return img
 
 		def GetFinalSize(self, img_w, img_h):
-			if self.c:
-				left, top, width, height = self.c
-				return (width, height)
-			return (self.w, self.h)
+			return self.Exec(FakeImage((img_w, img_h))).size
+
+
+
 
 	class Color(Transform):
 
@@ -386,7 +413,7 @@ class Operations(object):
 				else:
 					# FIXME: dlaczego jest potrzebny poniższy hack
 					first_frame.info['duration']=0
-					
+
 					save_params = dict(optimize=self.optimize)
 			elif fmt == 'JPEG':
 
@@ -431,7 +458,6 @@ class Operations(object):
 # ------------------------------------------------------------------------
 
 def CreateThumb(image_path, thumb_path, operations, save):
-
 	try:
 		source = Image.open(image_path)
 		frames = Transform(source, operations)
@@ -497,9 +523,9 @@ def ImageExternalOpt(image_path):
 
 	if mimetype == 'image/png':
 		if process.returncode == 99:
-			# If conversion results in quality below the min quality the image won't be saved 
-			# (or if outputting to stdin, 24-bit original will be output) 
-			# and pngquant will exit with status code Er 99 
+			# If conversion results in quality below the min quality the image won't be saved
+			# (or if outputting to stdin, 24-bit original will be output)
+			# and pngquant will exit with status code Er 99
 			return (org_size, org_size)
 		elif process.returncode == 25:
 			# 25 => LIBPNG_FATAL_ERROR

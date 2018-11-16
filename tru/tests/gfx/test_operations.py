@@ -42,6 +42,14 @@ def test_FitAll_img():
 	res.save("tests/gfx/tmp/linux FitAll 160 160.png")
 	assert cmp_image(res, pat)
 
+def test_FitAll_img2():
+	img = Image.open("tests/gfx/op/x.png")
+	pat = Image.open("tests/gfx/op/x FitAll 50 200.png")
+	res = Operations.FitAll(50, 200)(img)
+	res.save("tests/gfx/tmp/x FitAll 50 200.png")
+	assert cmp_image(res, pat)
+
+
 def test_MaxBox_img():
 	img = Image.open("tests/gfx/op/linux.png")
 	pat = Image.open("tests/gfx/op/linux MaxBox 160 160.png")
@@ -105,7 +113,7 @@ def test_RotateImage_img():
 
 
 def test_FitWidth_dim():
-	img1 = Image.new('RGBA', (40,4), color=(0,0,0,0))
+	img1 = Image.new('RGBA', (400,4), color=(0,0,0,0))
 	img2 = Image.new('RGBA', (10,15), color=(0,0,0,0))
 
 	def test_operation(img, w, h):
@@ -113,10 +121,16 @@ def test_FitWidth_dim():
 			op = Operations.FitWidth(w,h)
 			res = op(img)
 			assert res.size == op.GetFinalSize(*img.size)
-			assert((w is None       and res.size[0] == img.size[0])
-				or (w == 0          and res.size[0] == img.size[0])
-				or (w > img.size[0] and res.size[0] == img.size[0])
-				or (True            and res.size[0] == w          ))
+
+			if w is None:
+				assert res.size[0] == img.size[0]
+			elif w == 0:
+				assert res.size[0] == img.size[0]
+			elif w > img.size[0]:
+				assert res.size[0] == img.size[0]
+			else:
+				assert res.size[0] == w
+
 		except:
 			print("Operation failed on {} -> {}".format(img.size, (w,h)))
 			raise
@@ -128,6 +142,9 @@ def test_FitWidth_dim():
 			for h in hs:
 				test_operation(img, w, h)
 
+
+
+from pytest import approx
 
 def test_FitAll_dim():
 	img1 = Image.new('RGBA', (40,4), color=(0,0,0,0))
@@ -138,20 +155,36 @@ def test_FitAll_dim():
 			op = Operations.FitAll(w,h)
 			res = op(img)
 			assert res.size == op.GetFinalSize(*img.size)
-			assert(
-				((w is None or h is None) and res.size == img.size)
-				or (res.size[0] <= w and res.size[1] <= h)
-			)
+
+			if w and h:
+				assert abs(res.size[0] - (w-1)) <= 1
+				assert abs(res.size[1] - (h-1)) <= 1
+			else:
+				assert res.size == img.size
+
 		except:
 			print("Operation failed on {} -> {}".format(img.size, (w,h)))
 			raise
 
 	for img in [img1, img2]:
-		ws = [None] + list(range(0, 2 * img.size[0]))
-		hs = [None] + list(range(0, 2 * img.size[1]))
+		ws = range(0, 2 * img.size[0])
+		hs = range(0, 2 * img.size[1])
 		for w in ws:
 			for h in hs:
 				test_operation(img, w, h)
+
+
+def test_FitAll_dim2():
+	img = Image.new('RGBA', (400,200), color=(0,0,0,0))
+
+	assert Operations.FitAll(100,300)(img).size == (100,300)
+	assert Operations.FitAll(500,25)(img).size == (500,25)
+	assert Operations.FitAll(4,2)(img).size == (4,2)
+	assert Operations.FitAll(1,1)(img).size == (1,1)
+	assert Operations.FitAll(0,0)(img).size == (400,200)
+
+
+
 
 
 def test_MaxBox_dim():
@@ -163,10 +196,12 @@ def test_MaxBox_dim():
 			op = Operations.MaxBox(w,h)
 			res = op(img)
 			assert res.size == op.GetFinalSize(*img.size)
-			assert(
-				((w is None or h is None) and res.size == img.size)
-				or (res.size[0] <= w and res.size[1] <= h)
-			)
+
+			if w and h:
+				assert res.size[0] <= w and res.size[1] <= h
+			else:
+				assert res.size == img.size
+
 		except:
 			print("Operation failed on {} -> {}".format(img.size, (w,h)))
 			raise
@@ -179,6 +214,39 @@ def test_MaxBox_dim():
 				test_operation(img, w, h)
 
 
+def check_operation_size(oper, original_size, expected_size):
+	img = Image.new('RGBA', original_size, color=(0,0,0,0))
+	assert oper(img).size == expected_size
+	assert oper.GetFinalSize(*img.size) == expected_size
+
+
+def test_MaxBox_dim2():
+
+
+
+	ts = [1000, 110, 90, 10, 1]
+
+	for img_w in ts:
+		for img_h in ts:
+			for oper_w in ts:
+				for oper_h in ts:
+					check_operation_size(Operations.MaxBox(oper_w, oper_h), (img_w, img_h), (oper_w, oper_h))
+
+
+	check_operation_size(Operations.MaxBox(100,500), (400,100), (100,500))
+
+	img = Image.new('RGBA', (400,200), color=(0,0,0,0))
+	assert Operations.MaxBox(100,500)(img).size == (100,50)
+	Operations.MaxBox(100,500)(img).GetFinalSize(*img.size) == (100,50)
+
+	assert Operations.MaxBox(500,25)(img).size == (50,25)
+	assert Operations.MaxBox(4,2)(img).size == (4,2)
+	assert Operations.MaxBox(1,1)(img).size == (1,1)
+	assert Operations.MaxBox(0,0)(img).size == (400,200)
+
+
+
+
 def test_Force_dim():
 	img1 = Image.new('RGBA', (40,4), color=(0,0,0,0))
 	img2 = Image.new('RGBA', (10,15), color=(0,0,0,0))
@@ -188,10 +256,12 @@ def test_Force_dim():
 			op = Operations.Force(w,h)
 			res = op(img)
 			assert res.size == op.GetFinalSize(*img.size)
-			assert(
-				((w is None or h is None) and res.size == img.size)
-				or (res.size[0] == w and res.size[1] == h)
-			)
+
+			if w and h:
+				assert res.size[0] <= w and res.size[1] <= h
+			else:
+				assert res.size == img.size
+
 		except:
 			print("Operation failed on {} -> {}".format(img.size, (w,h)))
 			raise
@@ -205,26 +275,26 @@ def test_Force_dim():
 
 
 def test_Manual_dim():
-
 	img_w,img_h = randint(1,20),randint(1,20)
-
 	img1 = Image.new('RGBA', (img_w,img_h), color=(0,0,0,0))
 
 	def test_operation(img, w, h, crop):
 		try:
-
 			op = Operations.Manual(w,h,crop)
 			res = op(img)
 			assert res.size == op.GetFinalSize(*img.size)
 
-			if crop is not None:
-				cx, cy, cw, ch = crop
-				assert res.size[0] <= cw and res.size[1] <= ch
+			if w and h:
+				assert res.size[0] <= w
+				assert res.size[1] <= h
+
+				if crop is not None:
+					cx, cy, cw, ch = crop
+					if cw > 0 and ch > 0:
+						assert res.size[0] <= cw
+						assert res.size[1] <= ch
 			else:
-				if w is not None and h is not None:
-					assert res.size[0] <= w and res.size[1] <= h
-				else:
-					assert res.size == img.size
+				assert res.size == img.size
 
 		except:
 			print("Operation failed on {} -> {} {}".format(img.size, (w,h), crop))
@@ -244,4 +314,7 @@ def test_Manual_dim():
 				crop = None
 
 			test_operation(img, w, h, crop)
+
+
+# TODO: test SaveToBuf
 
