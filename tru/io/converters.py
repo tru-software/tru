@@ -120,6 +120,9 @@ def json2datetime(sdate):
 		return None
 	if sdate.endswith('Z'):
 		return datetime.datetime.strptime(sdate, '%Y-%m-%dT%H:%M:%S.%fZ')
+	if '+' in sdate:
+		sdate = sdate[:sdate.rindex('+')]
+		return datetime.datetime.strptime(sdate, '%Y-%m-%dT%H:%M:%S.%f')
 	return datetime.datetime.strptime(sdate, '%Y-%m-%dT%H:%M:%S.%f')
 
 # ------------------------------------------------------------------------
