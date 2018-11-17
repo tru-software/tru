@@ -103,7 +103,10 @@ class FakeImage:
 
 	def crop(self, c):
 		x0,y0,x1,y1 = c
-		return FakeImage((max(x1 - x0, 1), max(y1 - y0, 1)))
+		#return FakeImage((max(x1 - x0, 1), max(y1 - y0, 1)))
+		return FakeImage((max(x1 - x0, 0), max(y1 - y0, 0)))
+
+# -------------------------------------------------------------------
 
 
 class Operations(object):
@@ -151,26 +154,27 @@ class Operations(object):
 
 
 	class FitWidth(TransformSize):
-		""" Result image width <= given width
-			Preserve aspect ratio
-			Downscale only (noop otherwise)
-		"""
 
 		def Exec(self, img):
 
-
 			if not self.w:
+				# noop
 				return img
 
 			img_w, img_h = img.size
 
 			if not self.h:
+				# scale down to fit width
 				if img_w > self.w:
-					img = img.resize((self.w, int(img_h*self.w/img_w)), Image.ANTIALIAS)
+					new_h = max(int(img_h * self.w/img_w), 1)
+					img = img.resize((self.w, new_h), Image.ANTIALIAS)
 			else:
+				# scale down
 				if img_w > self.w or img_h > self.h:
 					scale = max(float(img_w)/self.w, float(img_h)/self.h)
-					img = img.resize((int(img_w/scale), int(img_h/scale)), Image.ANTIALIAS)
+					new_w = max(int(img_w/scale), 1)
+					new_h = max(int(img_h/scale), 1)
+					img = img.resize((new_w, new_h), Image.ANTIALIAS)
 
 			return img
 
@@ -179,16 +183,16 @@ class Operations(object):
 
 
 	class FitAll(TransformSize):
-		""" Resize to fit with crop
-		"""
 
 		def Exec(self, img):
 
 			if not self.w or not self.h:
+				# noop
 				return img
 
 			img_w, img_h = img.size
 
+			# minimal scale and crop
 			if img_w > self.w or img_h > self.h:
 
 				if float(img_w)/img_h <= float(self.w)/self.h:
@@ -207,10 +211,7 @@ class Operations(object):
 
 
 	class MaxBox(TransformSize):
-		""" Result image fits inside given size
-			Preserve aspect ratio
-			Downscale only (noop otherwise)
-		"""
+
 		def Exec(self, img):
 
 			if not self.w or not self.h:
@@ -219,31 +220,19 @@ class Operations(object):
 			img_w, img_h = img.size
 
 			if img_w > self.w or img_h > self.h:
-
-				scale_w = float(self.w) / img_w
-				scale_h = float(self.h) / img_h
-
-				if scale_w < scale_h:
-					new_w = self.w
-					new_h = float(img_h) * scale_w
-				else:
-					new_w = float(img_w) * scale_h
-					new_h = self.h
-
-				new_size = int(max(new_w, 1)), int(max(new_h, 1))
-				img = img.resize(new_size, Image.ANTIALIAS)
+				scale = max(float(img_w)/self.w, float(img_h)/self.h)
+				img = img.resize((int(img_w/scale), int(img_h/scale)), Image.ANTIALIAS)
 
 			return img
 
 		def GetFinalSize(self, img_w, img_h):
-			return self.Exec(FakeImage((img_w, img_h))).size
+			if img_w > self.w or img_h > self.h:
+				scale = max(float(img_w)/self.w, float(img_h)/self.h)
+				return (int(img_w/scale), int(img_h/scale))
+			return (img_w, img_h)
 
 
 	class Force(TransformSize):
-		""" Result image size <= given size
-			Ignore aspect ratio
-			Downscale only (noop otherwise)
-		"""
 
 		def Exec(self, img):
 
@@ -258,14 +247,10 @@ class Operations(object):
 			return img
 
 		def GetFinalSize(self, img_w, img_h):
-			return self.Exec(FakeImage((img_w, img_h))).size
+			return (min(self.w, img_w), min(self.h, img_h))
 
 
 	class Manual(TransformSize):
-		""" Resize and crop
-			Ignore aspect ratio
-			Up and down scale
-		"""
 
 		def __init__(self, width, height, crop):
 			self.w = width
@@ -289,10 +274,10 @@ class Operations(object):
 			return img
 
 		def GetFinalSize(self, img_w, img_h):
-			return self.Exec(FakeImage((img_w, img_h))).size
-
-
-
+			if self.c:
+				left, top, width, height = self.c
+				return (width, height)
+			return (self.w, self.h)
 
 	class Color(Transform):
 
@@ -458,6 +443,7 @@ class Operations(object):
 # ------------------------------------------------------------------------
 
 def CreateThumb(image_path, thumb_path, operations, save):
+
 	try:
 		source = Image.open(image_path)
 		frames = Transform(source, operations)
