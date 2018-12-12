@@ -103,7 +103,6 @@ class FakeImage:
 
 	def crop(self, c):
 		x0,y0,x1,y1 = c
-		#return FakeImage((max(x1 - x0, 1), max(y1 - y0, 1)))
 		return FakeImage((max(x1 - x0, 0), max(y1 - y0, 0)))
 
 # -------------------------------------------------------------------
@@ -220,16 +219,16 @@ class Operations(object):
 			img_w, img_h = img.size
 
 			if img_w > self.w or img_h > self.h:
-				scale = max(float(img_w)/self.w, float(img_h)/self.h)
-				img = img.resize((int(img_w/scale), int(img_h/scale)), Image.ANTIALIAS)
+				scale = min(float(self.w)/img_w, float(self.h)/img_h)
+
+				new_w = max(int(img_w*scale), 1)
+				new_h = max(int(img_h*scale), 1)
+				img = img.resize((new_w, new_h), Image.ANTIALIAS)
 
 			return img
 
 		def GetFinalSize(self, img_w, img_h):
-			if img_w > self.w or img_h > self.h:
-				scale = max(float(img_w)/self.w, float(img_h)/self.h)
-				return (int(img_w/scale), int(img_h/scale))
-			return (img_w, img_h)
+			return self.Exec(FakeImage((img_w, img_h))).size
 
 
 	class Force(TransformSize):
@@ -247,7 +246,7 @@ class Operations(object):
 			return img
 
 		def GetFinalSize(self, img_w, img_h):
-			return (min(self.w, img_w), min(self.h, img_h))
+			return self.Exec(FakeImage((img_w, img_h))).size
 
 
 	class Manual(TransformSize):
@@ -274,10 +273,7 @@ class Operations(object):
 			return img
 
 		def GetFinalSize(self, img_w, img_h):
-			if self.c:
-				left, top, width, height = self.c
-				return (width, height)
-			return (self.w, self.h)
+			return self.Exec(FakeImage((img_w, img_h))).size
 
 	class Color(Transform):
 
