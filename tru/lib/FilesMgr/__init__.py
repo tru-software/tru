@@ -36,6 +36,7 @@ class FileMgr:
 	class FileExts:
 		AUDIO = FileType('audio/', ('mp3', 'wav', 'm4a', 'mid', 'mpa', 'ra', 'wma', 'ogg'))
 		IMAGE = FileType('image/', ('jpg', 'jpeg', 'png', 'gif', 'bmp', 'mpo'))
+		VIDEO = FileType('video/', ('avi', 'flv', 'wmv', 'mp4', 'mov', 'ogv', 'm4v', 'mpg', 'mp2', 'mpeg', 'mpe', 'mpv'))
 		EXCEL = FileType(('application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/octet-stream', 'application/vnd.ms-office', 'application/vnd.oasis.opendocument.spreadsheet'), ('xls', 'xlsx', 'odt'))
 		WORD  = FileType(('application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.oasis.opendocument.text'), ('doc', 'docx', 'ods'))
 		PPT   = FileType(('application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.oasis.opendocument.presentation'), ('pps', 'ppsx', 'odp'))
