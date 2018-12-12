@@ -84,8 +84,9 @@ def test_RotateImage_img():
 	# exiftool -Orientation=8 -n img.png
 	# convert img.png -auto-orient out.png
 
-	pat = Image.open("tests/gfx/op/linux.png")
+
 	for i in range(1,9):
+		pat = Image.open("tests/gfx/op/linux {}.png".format(i))
 		img = Image.open("tests/gfx/op/linux exif-orientation-{}.png".format(i))
 		res = Operations.RotateImage()(img)
 		res.save("tests/gfx/tmp/linux exif-orientation-{} RotateImage.png".format(i))
