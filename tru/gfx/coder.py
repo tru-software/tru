@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import re
 import os
 import copy
@@ -11,8 +9,8 @@ from base64 import urlsafe_b64decode, urlsafe_b64encode
 import urllib.request, urllib.error, urllib.parse
 from urllib.parse import quote
 
-from tru.fs.utils import path_replace_ext
-from tru.io.hash import Hash, Hash_v1, Distribution, EncodeHash, DecodeHash
+from ..fs.utils import path_replace_ext
+from ..io.hash import Hash, Hash_v1, Distribution, EncodeHash, DecodeHash
 from .thumbs import Operations
 
 

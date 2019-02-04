@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import os, sys
 from PIL import Image, ImageEnhance
 from io import BytesIO
@@ -14,9 +12,9 @@ import mimetypes
 import subprocess
 import random
 
-from tru.utils.backtrace import GetTraceback
-from tru.fs.utils import TmpFile
-from tru.io.hash import Hash, Distribution, EncodeHash, DecodeHash, coalesce
+from ..utils.backtrace import GetTraceback
+from ..fs.utils import TmpFile
+from ..io.hash import Hash, Distribution, EncodeHash, DecodeHash, coalesce
 
 import mimetypes
 mimetypes.init()
@@ -358,6 +356,15 @@ class Operations(object):
 				bgcolor=coalesce(bgcolor, self.bgcolor)
 			)
 
+		def GetOptParams(self):
+			return {
+				"optimize": self.optimize,
+				"progressive": self.progressive,
+				"quality": self.quality,
+				"metadata": self.metadata,
+				"bgcolor": self.bgcolor
+			}
+
 		def __call__(self, src_path, src, buf, frames):
 
 			first_frame = frames[0] if isinstance(frames, list) else frames
@@ -438,7 +445,7 @@ class Operations(object):
 
 # ------------------------------------------------------------------------
 
-def CreateThumb(image_path, thumb_path, operations, save):
+def CreateThumb(image_path, thumb_path, operations, save, file_perms=0o644):
 
 	try:
 		source = Image.open(image_path)
@@ -448,28 +455,32 @@ def CreateThumb(image_path, thumb_path, operations, save):
 			fmt = save(image_path, source, thumb_path, frames)
 			return thumb_path
 
-		with TmpFile(thumb_path, mode="wb", perms=0o644) as f:
+		with TmpFile(thumb_path, mode="wb", perms=file_perms) as f:
 			fmt = save(image_path, source, f, frames)
 
 		for f in CreateThumb.OnNewImage:
-			f(thumb_path, image_path, fmt, {})
+			f(thumb_path, image_path, fmt, save.GetOptParams() if hasattr(save, 'GetOptParams') else {})
 
 		return thumb_path
 
 	except IOError as e:
-		log.error("Cannot store thumbnail '%s':%s\n%s"%(image_path, e, GetTraceback(e)))
+		log.exception("Cannot store thumbnail '{}': {}".format(image_path, e))
 		raise ThumbError("Cannot store thumbnail: {}".format(e))
 
 	except Exception as e:
-		log.error("Cannot create thumbnail '%s':%s\n%s"%(image_path, e, GetTraceback(e)))
+		log.exception("Cannot create thumbnail '{}': {}".format(image_path, e))
 		raise ThumbError("Cannot create thumbnail: {}".format(e))
 
-# Callbacks used for new images opitmisations: pngquant, gifsicle, jpegoptim; see ImageExternalOpt
+# ------------------------------------------------------------------------
+
+# Callbacks for image opitmisations: pngquant, gifsicle, jpegoptim;
+# See: CreateThumb, ImageExternalOpt
+# For best web performace use background process (like celery).
 CreateThumb.OnNewImage = []
 
 # ------------------------------------------------------------------------
 
-def ImageExternalOpt(image_path):
+def ImageExternalOpt(image_path, params={}):
 
 	if not os.path.isfile(image_path):
 		raise ValueError('No such file: "{}"'.format(image_path))
@@ -487,15 +498,19 @@ def ImageExternalOpt(image_path):
 	org_size = os.path.getsize(image_path)
 	pargs = None
 
+	quality = int(params['quality']) if 'quality' in params else None
+
 	if mimetype == 'image/png':
-		pargs = ['pngquant', '--quality', '60-80', '--speed', '3', '--output', output, image_path]
+		quality = '60-80' if quality is None else f'{quality}-{quality}'
+		pargs = ['pngquant', '--quality', quality, '--speed', '1', '--output', output, image_path]
 		process = subprocess.Popen(pargs, stdout=subprocess.PIPE)
 	elif mimetype == 'image/jpeg':
 		shutil.copyfile(image_path, output)
-		pargs = ['jpegoptim', '-qso', '-m90', output]
+		quality = '-m90' if quality is None else f'-m{quality}'
+		pargs = ['jpegoptim', '-qso', quality, output]
 		process = subprocess.Popen(pargs, stdout=subprocess.PIPE)
 	elif mimetype == 'image/gif':
-		pargs = ['gifsicle', '-b', '-O3', '-o', output, image_path]
+		pargs = ['gifsicle', '-i', '-j4', '-b', '-O3', '-o', output, image_path]
 		process = subprocess.Popen(pargs, stdout=subprocess.PIPE)
 	else:
 		raise ValueError('Unsupported image type "{}": "{}"'.format(mimetype, image_path))
