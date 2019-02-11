@@ -82,13 +82,10 @@ class FileMgr:
 
 		return self.CheckFileType(fileName, data)
 
-
-	def GetImageMeta(self, stream):
+	@classmethod
+	def GetImageMeta(cls, stream):
 
 		im = stream if Image.isImageType(stream) else Image.open(stream)
-		if im.format not in self.ALLOWED_IMAGE_FORMATS:
-			log.error("Unsupported image format: %s" % (im.format))
-			raise InputException('file', 'Format obrazu "{}" nie jest wspierany'.format(im.format))
 
 		# http://effbot.org/imagingbook/image.htm#tag-Image.Image.verify
 		im.load()
@@ -106,6 +103,10 @@ class FileMgr:
 		meta = {}
 		if mimetype.startswith('image/'):
 			meta = self.GetImageMeta(Image.open(io.BytesIO(data)))
+
+			if meta['format'] not in self.ALLOWED_IMAGE_FORMATS:
+				log.error("Unsupported image format: %s" % (im.format))
+				raise InputException('file', 'Format obrazu "{}" nie jest wspierany'.format(im.format))
 
 		# Dodatkowe testy na poprawność pliku/danych
 
