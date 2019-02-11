@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
-
 import os
 import datetime
 import magic
 import logging
 import io
 import uuid
-import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 
 from PIL import Image
 from tru.io import converters
@@ -69,7 +67,7 @@ class FileMgr:
 				fileSize = int(request.META["CONTENT_LENGTH"])
 				data = request.read(fileSize)
 		elif request.META['CONTENT_TYPE'] == 'application/octet-stream':
-			fileName = request.META["HTTP_X_FILE_NAME"]
+			fileName = urllib.parse.unquote(request.META["HTTP_X_FILE_NAME"])
 			fileSize = int(request.META["CONTENT_LENGTH"])
 			data = request.read(fileSize)
 		elif 'qqfile' in request.FILES:
@@ -84,6 +82,36 @@ class FileMgr:
 
 		return self.CheckFileType(fileName, data)
 
+
+	def GetImageMeta(self, stream):
+
+		im = stream if Image.isImageType(stream) else Image.open(stream)
+		if im.format not in self.ALLOWED_IMAGE_FORMATS:
+			log.error("Unsupported image format: %s" % (im.format))
+			raise InputException('file', 'Format obrazu "{}" nie jest wspierany'.format(im.format))
+
+		# http://effbot.org/imagingbook/image.htm#tag-Image.Image.verify
+		im.load()
+
+		return {
+			'format': im.format,
+			'width': im.width,
+			'height': im.height,
+			'mode': im.mode  # https://pillow.readthedocs.io/en/3.1.x/handbook/concepts.html#concept-modes
+		}
+
+	def GetFileMeta(self, mimetype, data):
+
+		im = None
+		meta = {}
+		if mimetype.startswith('image/'):
+			meta = self.GetImageMeta(Image.open(io.BytesIO(data)))
+
+		# Dodatkowe testy na poprawność pliku/danych
+
+		meta['size'] = len(data)
+		return meta, im
+
 	def CheckFileType(self, fileName, data):
 
 		if not self.IsValidExtension(fileName):
@@ -97,29 +125,14 @@ class FileMgr:
 		else:
 			raise InputException('file', f'Plik typu "{mimetype}" nie został rozpoznany jako jeden z wspieranych')
 
-		# Dodatkowe testy na poprawność pliku/danych
-
-		if mimetype.startswith('image/'):
-			try:
-				stream = io.BytesIO(data)
-				im = Image.open(stream)
-				if im.format not in self.ALLOWED_IMAGE_FORMATS:
-					log.error("Unsupported image format: %s" % (im.format))
-					raise InputException('file', 'Format obrazu "{}" nie jest wspierany'.format(im.format))
-
-				# http://effbot.org/imagingbook/image.htm#tag-Image.Image.verify
-				im.load()
-
-				ext = self.ALLOWED_IMAGE_FORMATS.get(im.format)
-				return data, ext, fileName, mimetype, im
-			except WebException as ex:
-				raise
-			except Exception as ex:
-				log.error("Cannot open image file (size=%s): %s" % (len(data), ex))
-				raise InputException('file', 'Plik nie został rozpoznany jako prawidłowy obraz')
-
-		ext = FileNameExtension(fileName).lower()
-		return data, ext, fileName, mimetype, None
+		try:
+			meta, im = self.GetFileMeta(mimetype, data)
+			return data, meta.get('format') or FileNameExtension(fileName).lower(), fileName, mimetype, im
+		except WebException as ex:
+			raise
+		except Exception as ex:
+			log.error("Cannot open image file (size=%s): %s" % (len(data), ex))
+			raise InputException('file', 'Plik nie został rozpoznany jako prawidłowy obraz')
 
 	def GetFilesSpaceLimit(self, request):
 		return None

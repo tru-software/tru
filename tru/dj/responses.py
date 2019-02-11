@@ -158,7 +158,7 @@ window.location.href = %s;
 		super(RedirectWithJavaScriptResponse, self).__init__( code )
 
 
-def SendFileResponse(request, path, nocache=False, download=False, tmp=False, age=300, upload_path=False, static_path=False):
+def SendFileResponse(request, path, nocache=False, download=False, tmp=False, age=300, upload_path=False, static_path=False, content_type=None):
 
 	path = '/' + path.lstrip('/')
 
@@ -170,6 +170,9 @@ def SendFileResponse(request, path, nocache=False, download=False, tmp=False, ag
 			response = serve(request, path, document_root=settings.BASE_DIR_FRONTEND + '/static')
 		else:
 			raise ValueError("Jedna z opcji powinna być wybrana: upload_path, static_path")
+
+		if content_type:
+			response['Content-Type'] = content_type
 
 		if nocache:
 			response['Cache-Control'] = 'no-cache, must-revalidate'
@@ -193,11 +196,13 @@ def SendFileResponse(request, path, nocache=False, download=False, tmp=False, ag
 		return response
 	else:
 
+		if content_type:
+			(content_type, encoding) = mimetypes.guess_type(path)
+
 		response = HttpResponse(status=200)
 
-		(type, encoding) = mimetypes.guess_type(path)
-		if type:
-			response['Content-Type'] = type
+		if content_type:
+			response['Content-Type'] = content_type
 
 		if nocache:
 			response['Cache-Control'] = 'no-cache, must-revalidate'
