@@ -154,6 +154,9 @@ class VideoFormat:
 
 	def Encode(self, filename, key, **kwargs):
 
+		if ' ' in filename:
+			raise ValueError("Encode source path with urlencode")
+
 		assert isinstance(key, bytes), "Key must be an instance of bytes, got {}".format(repr(key))
 
 		encoder_version = 0
@@ -165,7 +168,8 @@ class VideoFormat:
 		if (len(trx)+4) % 3:
 			trx += pack('!B', 0) * (3-((len(trx)+4) % 3))
 
-		trx_hash = Hash32(key + trx + filename.encode('utf8'))
+		# The filename here is a url-encoded path.
+		trx_hash = Hash32(key + trx + filename.encode('ascii'))
 		return urlsafe_b64encode(trx + pack('!I', trx_hash)).decode('ascii')
 
 
@@ -177,7 +181,7 @@ class VideoFormat:
 		if not cls.url_fmt_re.match(data):
 			raise ValueError('Invalid fmt data: {}'.format(data))
 
-		filename = filename.encode('utf8') if isinstance(filename, str) else filename
+		filename = filename.encode('ascii') if isinstance(filename, str) else filename
 		data = urlsafe_b64decode(data.encode('ascii') if isinstance(data, str) else data)
 
 		encoder_version, = unpack('!B', data[:1])
@@ -205,6 +209,7 @@ class VideoFormat:
 	def GetCmd(self, path):
 		cmd = [
 	        'ffmpeg',
+			"-y",
 	        '-i', path,
 			'-sn',  # disable subtitle
 			'-c:v', 'copy',
@@ -304,6 +309,7 @@ def ExtractFrame(path, output, at=0.0, quality=1):
 
 	command = [
 		"ffmpeg",
+		"-y",
 	    #"-loglevel", "quiet",
 	    #"-print_format", "json",
 		'-ss', str(float(at)),
