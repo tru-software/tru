@@ -37,12 +37,16 @@ class HTMLHelpers(object):
 		return Markup(cond and 'selected="selected"' or '')
 
 	@staticmethod
+	def Active(cond, cls="active"):
+		return cls if cond else ""
+
+	@staticmethod
 	def Checked(cond):
-		return Markup(cond and 'checked="checked"' or '')
+		return Markup('checked="checked"' if cond else '')
 
 	@staticmethod
 	def Disabled(cond):
-		return Markup(cond and 'disabled="disabled"' or '')
+		return Markup('disabled="disabled"' if cond else '')
 
 	@staticmethod
 	def AsyncLoader():
