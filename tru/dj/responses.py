@@ -252,3 +252,7 @@ class RobotsTxtFactory:
 class FrozenRobotsTxt(RobotsTxtFactory):
 	def _merge(self, lines):
 		return self
+
+
+class HttpResponseUnauthorized(HttpResponse):
+	status_code = 401
