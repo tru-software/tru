@@ -56,7 +56,14 @@ class MailImageCollector:
 
 		return 'cid:%s'%new_cid
 
-# ----------------------------------------------------------------------------
+
+def _force_ascii(s):
+	try:
+		s.encode('ascii')
+		return s
+	except UnicodeEncodeError:
+	    return Header(s, 'utf-8').encode()
+
 
 def send_mail(subject, email, request, env, html_part, text_part='', from_field=settings.EMAIL_DEFAULT_FROM, reply_to=None):
 
@@ -153,18 +160,19 @@ def send_html_mail(subject, html_content, text_content, to_, from_=settings.EMAI
 				fileMsg.add_header('Content-Disposition', 'attachment;filename={}'.format(filename or os.path.basename(path)))
 				msgRoot.attach(fileMsg)
 
-	smtp = SMTP(smtp_server, smtp_port) if smtp_ssl is not True else SMTP_SSL(smtp_server, smtp_port)
-	smtp.ehlo()
-	if smtp_tls and not smtp_ssl:
-		smtp.starttls()
+	with (SMTP(smtp_server, smtp_port) if smtp_ssl is not True else SMTP_SSL(smtp_server, smtp_port)) as smtp:
 		smtp.ehlo()
-	if smtp_user:
-		smtp.login(smtp_user, smtp_pass)
+		if smtp_tls and not smtp_ssl:
+			smtp.starttls()
+			smtp.ehlo()
+		if smtp_user:
+			smtp.login(smtp_user, smtp_pass)
 
-	content = msgRoot.as_bytes() if hasattr(msgRoot, 'as_bytes') else msgRoot.as_string()
-	try:
-		smtp.sendmail(from_, to_, content, mail_options=["smtputf8"])
-	except SMTPNotSupportedError as ex:
-		log.warn(f"Server for mail \"{to_}\" does not support \"smtputf8\" extension, retry without")
-		smtp.sendmail(from_, to_, content)
-	smtp.quit()
+		content = msgRoot.as_string()
+
+		if smtp.has_extn('smtputf8'):
+			smtp.sendmail(from_, to_, content, mail_options=["smtputf8"])
+		else:
+			smtp.sendmail(_force_ascii(from_), _force_ascii(to_), content)
+
+		smtp.quit()
