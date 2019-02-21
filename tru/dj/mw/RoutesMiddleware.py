@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import re
 import logging
 import settings
@@ -8,6 +6,7 @@ import json
 from .CatchExceptions import CatchExceptions
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound, HttpResponseServerError, HttpResponseServerError, Http404
+from mako.filters import html_escape
 
 import core as FW
 
