@@ -1,28 +1,15 @@
-# -*- coding: utf-8 -*-
-
 from django.conf import settings
+import logging
 import os.path
 
 import email.utils
-try:
-	# Py3
-	from email.mime.multipart import MIMEMultipart
-	from email.mime.text import MIMEText
-	from email.mime.image import MIMEImage
-	import email.charset as Charset
-	from email.header import Header
-except ImportError:
-	# Py2
-	from email.MIMEMultipart import MIMEMultipart
-	from email.MIMEText import MIMEText
-	from email.MIMEImage import MIMEImage
-	from email import Charset
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+import email.charset as Charset
+from email.header import Header
 
-	def Header(txt, encoding):
-		return txt.encode(encoding)
-
-
-from smtplib import SMTP, SMTP_SSL
+from smtplib import SMTP, SMTP_SSL, SMTPNotSupportedError
 
 smtp_server=settings.EMAIL_HOST
 smtp_port=settings.EMAIL_PORT
@@ -33,6 +20,8 @@ smtp_ssl=settings.EMAIL_USE_SSL
 
 charset='utf-8'
 Charset.add_charset(charset, Charset.SHORTEST, None, None)
+
+log = logging.getLogger(__name__)
 
 
 class MailImageCollector:
@@ -173,5 +162,9 @@ def send_html_mail(subject, html_content, text_content, to_, from_=settings.EMAI
 		smtp.login(smtp_user, smtp_pass)
 
 	content = msgRoot.as_bytes() if hasattr(msgRoot, 'as_bytes') else msgRoot.as_string()
-	smtp.sendmail(from_, to_, content)
+	try:
+		smtp.sendmail(from_, to_, content, mail_options=["smtputf8"])
+	except SMTPNotSupportedError as ex:
+		log.warn(f"Server for mail \"{to_}\" does not support \"smtputf8\" extension, retry without")
+		smtp.sendmail(from_, to_, content)
 	smtp.quit()
