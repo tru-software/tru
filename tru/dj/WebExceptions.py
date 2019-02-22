@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from contextlib import contextmanager
 import json
 import copy
@@ -155,10 +153,13 @@ class AuthException(RequestException, JSONResponse):
 			'error_description': self.description
 		}
 
-class BotRequestException(Exception):
 
-	def __init__(self, msg=''):
-		super().__init__(msg)
+class BotRequestException(Exception):
+	pass
+
+
+class BadRequestException(Exception):
+	pass
 
 
 class ErrorsList(RequestException):

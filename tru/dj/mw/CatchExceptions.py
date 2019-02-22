@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import os
 import sys
 import re
@@ -17,7 +15,7 @@ from django.db.utils import OperationalError as DjangoOperationalError
 
 from .. import HttpRequest
 from ..responses import FileInMemory
-from ..WebExceptions import TooLongRequestException, WebException, BotRequestException
+from ..WebExceptions import TooLongRequestException, WebException, BotRequestException, BadRequestException
 from ...utils.backtrace import GetTraceback, FormatTraceback
 
 log = logging.getLogger(__name__)
@@ -58,12 +56,15 @@ def GetEnvInfo(request=None):
 # TODO: Override django.core.handlers.exception.response_for_exception
 class CatchExceptions:
 
-	templates_path = settings.BASE_DIR_FRONTEND + '/static/http/'
+	templates_path = getattr(settings, 'HTTP_RESPONSES_DIR', None) or (settings.BASE_DIR_FRONTEND + '/static/http/')
 
 	_cache = {}
 
 	def __init__(self, func):
 		self.func = func
+
+		# TODO: w przypadku wywołań ajax lepiej zrwócić mniej kodu:
+		# <b>Usługa jest chwilowo niedostępna. Prosimy spróbować później.</b>
 
 		self._page400 = self._load('400.html', status=400)  # HttpResponseBadRequest
 		self._page403 = self._load('403.html', status=403)  # HttpResponseForbidden
@@ -87,9 +88,9 @@ class CatchExceptions:
 		return request and hasattr(request, 'current_service') and request.current_service and request.current_service.GetLogger() or log
 
 
-	def __call__(self, request):
+	def __call__(self, request, *args, **kwargs):
 		try:
-			return self.func(request)
+			return self.func(request, *args, **kwargs)
 
 		except exceptions.DisallowedHost as ex:
 			self.GetLogger(request).exception(GetEnvInfo(request))
@@ -151,12 +152,18 @@ class CatchExceptions:
 			response.source_exc = pd
 			return response
 
+		except BadRequestException as pd:
+			self.GetLogger(request).exception(GetEnvInfo(request))
+			response = self._page400(request)
+			response.skip_bug_report = True
+			return response
+
 		except BotRequestException as ex:
 			self.GetLogger(request).exception(GetEnvInfo(request))
 			response = self._page503(request, status=503)
 			response.skip_bug_report = True
 			return response
-			
+
 		except NotImplementedError as ex:
 			self.GetLogger(request).exception(GetEnvInfo(request))
 			return self._page500(request, status=503)
