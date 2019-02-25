@@ -168,9 +168,10 @@ class SuccessResponse:
 		#error={KOD_BŁĘDU}&errorMessage=field1:desc1&field1:desc2...
 		#errorMessage może zawierać informacje dotyczące wielu błędów.
 
-		content = self.Request(self.p24.PRZELEWY24_URL + '/trnVerify', data)
+		verify_url = self.p24.PRZELEWY24_URL + '/trnVerify'
+		content = self.Request(verify_url, data)
 
-		log.info("Payment verification: checking text: {}".format(repr(content)))
+		log.info("Payment verification \"{}\": checking text: {}".format(verify_url, repr(content)))
 
 		if not content:
 			raise VerifyErrorException('ERROR', 'Empty response')
