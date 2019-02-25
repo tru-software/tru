@@ -202,7 +202,7 @@ class SuccessResponse:
 
 class ErrorResponse:
 
-	def __init__(self, p24: Przelewy24Id):
+	def __init__(self, p24: Przelewy24Id, P: dict):
 
 		self.p24 = p24
 
