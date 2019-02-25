@@ -149,9 +149,8 @@ class SuccessResponse:
 
 		return response.content.decode('utf8')
 
-	def Verify(self, payment):
-
-		data = {
+	def Data(self, payment):
+		return {
 			"p24_merchant_id" : self.merchant_id,
 			"p24_pos_id"      : self.merchant_id,
 			"p24_session_id"  : self.session_key,
@@ -161,6 +160,10 @@ class SuccessResponse:
 			"p24_order_id"    : self.order_id,
 			"p24_sign"        : self.p24.CRC(self.session_key, self.order_id, payment.price, 'PLN')
 		}
+
+	def Verify(self, payment):
+
+		data = self.Data(payment)
 
 		#Odpowiedź dla transakcji poprawnie zweryfikowanej:
 		#error=0
