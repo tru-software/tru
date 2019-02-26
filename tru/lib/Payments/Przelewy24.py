@@ -127,7 +127,7 @@ class SuccessResponse:
 
 		self.merchant_id = int(P['p24_merchant_id'])
 		self.session_key = P['p24_session_id']
-		self.order_id = int(P['p24_order_id'])
+		self.order_id = int(P['p24_order_id']) if P.get('p24_order_id') else None
 		self.amount = int(P['p24_amount'])
 
 	def GetSessionKey(self):
@@ -149,27 +149,17 @@ class SuccessResponse:
 
 		return response.content.decode('utf8')
 
-	def Data(self, payment):
-		return {
-			"p24_merchant_id" : self.merchant_id,
-			"p24_pos_id"      : self.merchant_id,
-			"p24_session_id"  : self.session_key,
-			# "p24_amount"      : self.amount,
-			"p24_amount"      : payment.price,
-			"p24_currency"    : 'PLN',
-			"p24_order_id"    : self.order_id,
-			"p24_sign"        : self.p24.CRC(self.session_key, self.order_id, payment.price, 'PLN')
-		}
+	def Verify(self):
 
-	def Verify(self, payment):
-
-		data = self.Data(payment)
+		data = self.GetData()
 
 		#Odpowiedź dla transakcji poprawnie zweryfikowanej:
 		#error=0
 		#Odpowiedź z błędem:
 		#error={KOD_BŁĘDU}&errorMessage=field1:desc1&field1:desc2...
 		#errorMessage może zawierać informacje dotyczące wielu błędów.
+
+		#przychodzi też potwierdzenie w formacie: "RESULT\r\nTRUE" - być może to dotyczy starych transakcji
 
 		verify_url = self.p24.PRZELEWY24_URL + '/trnVerify'
 		content = self.Request(verify_url, data)
@@ -179,15 +169,22 @@ class SuccessResponse:
 		if not content:
 			raise VerifyErrorException('ERROR', 'Empty response')
 
-		params = urllib.parse.parse_qs(content)
+		if content.startswith('RESULT\r\n'):
+			content = content[8:]
+			if content == 'TRUE':
+				return True
 
-		if params.get('error') == '0':
-			return True
+			VerifyErrorException(content, '')
+		else:
+			params = urllib.parse.parse_qs(content)
 
-		if content.strip() == 'error=0':
-			return True
+			if params.get('error') == '0':
+				return True
 
-		raise VerifyErrorException(params.get('error'), params.get('errorMessage'))
+			if content.strip() == 'error=0':
+				return True
+
+			raise VerifyErrorException(params.get('error'), params.get('errorMessage'))
 
 	def GetOrderId(self):
 		return self.order_id
@@ -200,7 +197,7 @@ class SuccessResponse:
 			"p24_amount"      : self.amount,
 			"p24_currency"    : 'PLN',
 			"p24_order_id"    : self.order_id,
-			"p24_sign"        : self.CRC( self.session_key, self.order_id, self.amount, 'PLN')
+			"p24_sign"        : self.p24.CRC(self.session_key, self.order_id, self.amount, 'PLN')
 		}
 
 
