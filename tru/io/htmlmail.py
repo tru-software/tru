@@ -19,7 +19,7 @@ smtp_tls=settings.EMAIL_USE_TLS
 smtp_ssl=settings.EMAIL_USE_SSL
 
 charset='utf-8'
-Charset.add_charset(charset, Charset.SHORTEST, None, None)
+Charset.add_charset(charset, Charset.SHORTEST, Charset.BASE64, charset)
 
 log = logging.getLogger(__name__)
 
