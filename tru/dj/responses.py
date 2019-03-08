@@ -196,7 +196,7 @@ def SendFileResponse(request, path, nocache=False, download=False, tmp=False, ag
 		return response
 	else:
 
-		if content_type:
+		if not content_type:
 			(content_type, encoding) = mimetypes.guess_type(path)
 
 		response = HttpResponse(status=200)
