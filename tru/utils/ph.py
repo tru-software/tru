@@ -11,9 +11,13 @@ class PhError(Exception):
 
 
 def ph_request_result(url, data):
-	resp = requests.post(url, data).json()
-	if resp.get('error_code'):
-		raise PhError("{}; {}".format(resp['error_code'], resp.get('error_info', '')))
+	resp = requests.post(url, data)
+	if resp.status_code == 200:
+		resp = resp.json()
+		if resp.get('error_code'):
+			raise PhError("{}; {}".format(resp['error_code'], resp.get('error_info', '')))
+	else:
+		raise PhError("{}; http error code returned".format(resp.status_code))
 	return resp['result']
 
 
