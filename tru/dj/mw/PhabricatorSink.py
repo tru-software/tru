@@ -8,6 +8,7 @@ import logging
 import redis
 import socket
 import pprint
+import base64
 
 try:
 	import version
@@ -22,7 +23,7 @@ from .CatchExceptions import CatchExceptions, GetEnvInfo
 from ...io.hash import Hash32
 from ...io import converters
 from ...utils.backtrace import GetTraceback
-
+from ...utils.ph import Ph, ph_upload_file_get_id
 
 POOL = None
 
@@ -57,8 +58,25 @@ def FormatDescription(key, traceback, request=None, config=None):
 	return description
 
 
-def ReportToPhabricator(endpoint_hash, title, description, conduit_gateway=None):
+def UploadFileToPhabricator(api, fname, content):
+	"""
+	fname -- file name
+	content -- must be bytes
+	return -- phabricator file id
+	"""
+	ph = Ph(url=api['url'], token=api['token'])
+	return ph_upload_file_get_id(ph,
+		name = fname,
+		data_base64 = base64.b64encode(content),
+		viewPolicy = maniphest['viewPolicy'],
+		canCDN = 'false'
+	)
 
+
+def ReportToPhabricator(endpoint_hash, title, description, conduit_gateway=None, upload_files=None):
+	"""
+	upload_files -- [(filename, bytes), ...]
+	"""
 	if not POOL:
 		log.error("PhabricatorSink: ReportBug: redis is not initialized")
 		return False
@@ -72,9 +90,17 @@ def ReportToPhabricator(endpoint_hash, title, description, conduit_gateway=None)
 
 		ph = Phabricator(host=api['url'], token=api['token'])
 
+		if upload_files is not None:
+			attach_desc = ['\n\nAttachments:\n']
+			for fname, content in upload_files:
+				ret_id = UploadFileToPhabricator(api, fname, content)
+				attach_desc.append('{' + "F{}".format(str(ret_id)) + '}\n')
+		else:
+			attach_desc = []
+
 		task = ph.maniphest.createtask(
 			title=title,
-			description=description,
+			description=description + ''.join(attach_desc),
 			ownerPHID=api.get('owner') or maniphest.get('owner'),
 			viewPolicy=maniphest['viewPolicy'],
 			editPolicy=maniphest['editPolicy'],
@@ -111,11 +137,11 @@ def ReportToPhabricator(endpoint_hash, title, description, conduit_gateway=None)
 			pipe.execute()
 
 
-def ReportBug(title, ex, traceback, config=None, request=None, conduit_gateway=None):
+def ReportBug(title, ex, traceback, config=None, request=None, conduit_gateway=None, upload_files=None):
 
 	endpoint_hash = Hash32(traceback)
 	description = FormatDescription(endpoint_hash, traceback, config=config, request=request)
-	return ReportToPhabricator(endpoint_hash, title, description, conduit_gateway=conduit_gateway)
+	return ReportToPhabricator(endpoint_hash, title, description, conduit_gateway=conduit_gateway, upload_files=upload_files)
 
 
 def PhabricatorSink(get_response):
