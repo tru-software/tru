@@ -42,7 +42,7 @@ class ViewResponse(HttpResponse, BaseException):
 		self.proc = proc
 		self.request = request
 
-		if proc is None and request is not None:
+		if request is not None:
 			self.__render_view()
 
 	def __call__(self, request, env=None):
