@@ -22,9 +22,9 @@ class Filter:
 
 		d = self.tags[tag.name]
 
-		for a, k in attr.items():
+		for a, k in list(attr.items()):
 			try:
-				if (a in d) is False:
+				if not d or (a in d) is False:
 					del tag[a]
 				elif d[a] is not None and d[a](k) is False:
 					del tag[a]
@@ -39,7 +39,7 @@ class Filter:
 			v = c.split(':')
 			if len(v) != 2:
 				continue
-			css.append( ( v[0].strip(), v[1].strip() ) )
+			css.append((v[0].strip(), v[1].strip()))
 		return css
 
 	def clean(self, soup):
@@ -47,20 +47,20 @@ class Filter:
 			self.clean_part(e)
 
 	def clean_part(self, node):
-		if isinstance(node,Comment) or isinstance(node,Declaration) or isinstance(node,ProcessingInstruction) or isinstance(node,CData):
+		if isinstance(node, (Comment, Declaration, ProcessingInstruction, CData)):
 			node.extract()
 		elif isinstance(node, NavigableString):
 			pass
-		elif isinstance(node,Tag):
+		elif isinstance(node, Tag):
 
-			x = self.check( node )
-			if x == False:
+			x = self.check(node)
+			if x is False:
 				node.extract()
 			else:
 				for e in node.contents[:]:
 					self.clean_part(e)
 
-				if x == None:
+				if x is None:
 					i = node.parent.contents.index(node)+1
 					for e in node.contents[:]:
 						node.parent.insert(i, e)
@@ -83,7 +83,7 @@ class PagerFilter(Filter):
 	def clean(self, soup):
 		self.pages.append('')
 		for e in soup.contents:
-			if isinstance(e,Tag) and e.name == 'div' and e._getAttrMap().get('style',None) == 'page-break-after: always;':
+			if isinstance(e,Tag) and e.name == 'div' and e.attrs.get('style') == 'page-break-after: always;':
 				self.pages.append('')
 			else:
 				self.pages[-1] += e.__str__()
@@ -155,9 +155,9 @@ class BlogFilter(Filter):
 	
 	@staticmethod
 	def _is_color(value):
-		return re.match( r'^rgb *\( *[0-9]{1,3} *, *[0-9]{1,3} *, *[0-9]{1,3} *\)$', value) != None or \
-			re.match( r'^#[0-9a-fA-F]{3}$', value) != None or \
-			re.match( r'^#[0-9a-fA-F]{6}$', value) != None
+		return re.match( r'^rgb *\( *[0-9]{1,3} *, *[0-9]{1,3} *, *[0-9]{1,3} *\)$', value) is not None or \
+			re.match( r'^#[0-9a-fA-F]{3}$', value) is not None or \
+			re.match( r'^#[0-9a-fA-F]{6}$', value) is not None
 	
 	def _span_styles(self, style):
 		css = self.parse_style(style)
@@ -168,7 +168,7 @@ class BlogFilter(Filter):
 				if not v in ('xx-large', 'x-large', 'large', 'medium', 'small', 'x-small', 'xx-small', 'larger', 'smaller'):
 					return False
 			elif n == 'color':
-				if self._is_color(v) != True:
+				if self._is_color(v) is not True:
 					return False
 			else:
 				return False
@@ -184,7 +184,7 @@ class HTMLCleaner:
 			filter = BasicFilter()
 
 		soup = BeautifulSoup(code, "html.parser")
-		filter.clean( soup )
+		filter.clean(soup)
 		# return soup.prettify(encoding=None);
 		return soup.__str__()
 
