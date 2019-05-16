@@ -212,7 +212,6 @@ class VideoFormat:
 			"-y",
 	        '-i', path,
 			'-sn',  # disable subtitle
-			'-c:v', 'copy',
 			'-framerate', str(self.fps),  #  number     set the number of video frames to output
 		]
 
@@ -226,14 +225,21 @@ class VideoFormat:
 			# TODO:
 			# cmd += ['-q:a', str(self.audio)]
 			cmd += ['-c:a', 'copy']
-	        
+
 		format_tpl = self.formats_by_mimetype[self.format]
 		ffmpeg_encoder = format_tpl[3]
 
 		cmd += ['-f', ffmpeg_encoder]
 
-		# https://stackoverflow.com/questions/34123272/ffmpeg-transmux-mpegts-to-mp4-gives-error-muxer-does-not-support-non-seekable
-		cmd += ['-movflags', 'frag_keyframe+empty_moov']
+		if self.format == "image/gif":
+			# -t  - time limit
+			# -ss - skip start seconds
+			# setpts - speedup
+			cmd += ['-t', '5', '-ss', '1', '-filter:v', "setpts=0.4*PTS"]
+		else:
+			# https://stackoverflow.com/questions/34123272/ffmpeg-transmux-mpegts-to-mp4-gives-error-muxer-does-not-support-non-seekable
+			cmd += ['-c:v', 'copy']
+			cmd += ['-movflags', 'frag_keyframe+empty_moov']
 
 		cmd += ['pipe:1']
 
