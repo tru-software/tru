@@ -370,10 +370,10 @@ class Operations(object):
 			first_frame = frames[0] if isinstance(frames, list) else frames
 			fmt = self.format or src.format
 
-			if fmt not in ('GIF', 'PNG', 'JPEG'):
+			if fmt not in ('GIF', 'PNG', 'JPEG', 'WEBP'):
 				fmt = 'JPEG'
 
-			if fmt != 'GIF': # or APNG - TODO
+			if fmt != 'GIF': # or APNG or WEBP - TODO
 				frames = first_frame
 
 			if fmt == 'GIF':
@@ -414,6 +414,14 @@ class Operations(object):
 
 			elif fmt == 'PNG':
 				save_params = dict(progressive=self.progressive, quality=self.quality, optimize=self.optimize)
+			elif fmt == 'WEBP':
+				# lossless - If present and true, instructs the WebP writer to use lossless compression.
+				# quality - Integer, 1-100, Defaults to 80. For lossy, 0 gives the smallest size and 100 the largest.
+				#           For lossless, this parameter is the amount of effort put into the compression: 0 is the fastest,
+				#           but gives larger files compared to the slowest, but best, 100.
+				# method - Quality/speed trade-off (0=fast, 6=slower-better). Defaults to 0.
+				# TODO: exif=self.metadata
+				save_params = dict(quality=self.quality, lossless=self.optimize, icc_procfile=False, method=(6 if self.quality == 0 else 0))
 			else:
 				save_params = {}
 
@@ -448,7 +456,7 @@ class Operations(object):
 def CreateThumb(image_path, thumb_path, operations, save, file_perms=0o644):
 
 	try:
-		source = Image.open(image_path)
+		source = image_path if isinstance(image_path, Image.Image) else Image.open(image_path)
 		frames = Transform(source, operations)
 
 		if hasattr(thumb_path, 'write'):
@@ -512,6 +520,9 @@ def ImageExternalOpt(image_path, params={}):
 	elif mimetype == 'image/gif':
 		pargs = ['gifsicle', '-i', '-j4', '-b', '-O3', '-o', output, image_path]
 		process = subprocess.Popen(pargs, stdout=subprocess.PIPE)
+	elif mimetype == 'image/webp':
+		# TODO: ???
+		pass
 	else:
 		raise ValueError('Unsupported image type "{}": "{}"'.format(mimetype, image_path))
 

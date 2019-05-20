@@ -315,6 +315,8 @@ class ImageType(object):
 			ext = 'png'
 		elif fmt == 'JPEG':
 			ext = 'jpg'
+		elif fmt == 'WEBP':
+			ext = 'webp'
 		else:
 			if keep_org_ext:
 				ext = None
@@ -437,6 +439,8 @@ class ImageType(object):
 			format = 'PNG'
 		elif force_format == 0x05:
 			format = 'GIF'
+		elif force_format == 0x06:
+			format = 'WEBP'
 
 		thumb = ImageType.classes_map[op_code].decode(trx[6:])
 		it = ImageType(0x9999, thumb, format, 'Custom format', watermark=False, prefix='', quality=quality, progressive=progressive, optimize=optimize)
@@ -462,6 +466,8 @@ class ImageType(object):
 			format = 0x04
 		elif force_format == 'GIF':
 			format = 0x05
+		elif force_format == 'WEBP':
+			format = 0x06
 
 		if self.tmp_preview:
 			format |= 0x10
@@ -551,6 +557,8 @@ class ImageType(object):
 			return 'JPEG'
 		elif img.endswith('.gif'):
 			return 'GIF'
+		elif img.endswith('.webp'):
+			return 'WEBP'
 		return None
 
 	def GetMimeType(self, img=None):
@@ -563,6 +571,8 @@ class ImageType(object):
 			return "image/png"
 		elif fmt == 'JPEG':
 			return "image/jpeg"
+		elif fmt == 'WEBP':
+			return "image/webp"
 
 		return "image/jpeg"
 

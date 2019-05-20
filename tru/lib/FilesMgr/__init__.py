@@ -102,7 +102,8 @@ class FileMgr:
 		im = None
 		meta = {}
 		if mimetype.startswith('image/'):
-			meta = self.GetImageMeta(Image.open(io.BytesIO(data)))
+			im = Image.open(io.BytesIO(data))
+			meta = self.GetImageMeta(im)
 
 			if meta['format'] not in self.ALLOWED_IMAGE_FORMATS:
 				log.error("Unsupported image format: %s" % (im.format))
