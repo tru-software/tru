@@ -421,7 +421,7 @@ class Operations(object):
 				#           but gives larger files compared to the slowest, but best, 100.
 				# method - Quality/speed trade-off (0=fast, 6=slower-better). Defaults to 0.
 				# TODO: exif=self.metadata
-				save_params = dict(quality=self.quality, lossless=self.optimize, icc_procfile=False, method=(6 if self.quality == 0 else 0))
+				save_params = dict(quality=self.quality, lossless=not self.optimize, icc_procfile=False, method=(6 if self.quality == 0 else 2))
 			else:
 				save_params = {}
 
@@ -446,7 +446,6 @@ class Operations(object):
 						return
 					except Exception as ex:
 						log.error("Cannot set iptc data to JPEG file: %s", ex, exc_info=ex)
-
 
 			first_frame.save(buf, fmt, **save_params)
 
