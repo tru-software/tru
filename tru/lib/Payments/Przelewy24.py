@@ -76,16 +76,18 @@ class Przelewy24Id(object):
 
 class PaymentForm:
 
-	def __init__(self, p24: Przelewy24Id, description: str, payment, url_return: str, url_cancel: str, url_cb: str):
+	def __init__(self, p24: Przelewy24Id, description: str, order, url_return: str, url_cancel: str, url_cb: str, currency='PLN', country='PL'):
 
 		self.p24 = p24
 		self.description = description
-		self.session_key = payment.session_key
-		self.email = payment.owner_email
+		self.session_key = order.session_key
+		self.email = order.owner_email
 		self.url_return = url_return
 		self.url_cancel = url_cancel
 		self.url_cb = url_cb
-		self.price = payment.price
+		self.price = order.price
+		self.currency = currency
+		self.country = country
 
 	def GetURL(self):
 		return self.p24.PRZELEWY24_URL + '/trnDirect'
@@ -97,16 +99,16 @@ class PaymentForm:
 			"p24_pos_id"      : self.p24.PRZELEWY24_ID,
 			"p24_session_id"  : self.session_key,
 			"p24_amount"      : self.price,
-			"p24_currency"    : "PLN",
+			"p24_currency"    : self.currency,
 			# "p24_description" : "TEST_ERR04",
 			"p24_description" : self.description,
 			"p24_email"       : self.email or 'at@tru.pl',
-			"p24_country"     : "PL",
+			"p24_country"     : self.country,
 			"p24_url_return"  : self.url_return,
 			"p24_url_cancel"  : self.url_cancel,
 			"p24_url_status"  : self.url_cb,
 			"p24_encoding"    : "UTF-8",
-			"p24_sign"        : self.p24.CRC(self.session_key, self.p24.PRZELEWY24_ID, self.price, 'PLN'),
+			"p24_sign"        : self.p24.CRC(self.session_key, self.p24.PRZELEWY24_ID, self.price, self.currency),
 		}
 
 
@@ -129,6 +131,7 @@ class SuccessResponse:
 		self.session_key = P['p24_session_id']
 		self.order_id = int(P['p24_order_id']) if P.get('p24_order_id') else None
 		self.amount = int(P['p24_amount'])
+		self.currency = P['p24_currency']
 
 	def GetSessionKey(self):
 		return self.session_key
@@ -195,9 +198,9 @@ class SuccessResponse:
 			"p24_pos_id"      : self.merchant_id,
 			"p24_session_id"  : self.session_key,
 			"p24_amount"      : self.amount,
-			"p24_currency"    : 'PLN',
+			"p24_currency"    : self.currency,
 			"p24_order_id"    : self.order_id,
-			"p24_sign"        : self.p24.CRC(self.session_key, self.order_id, self.amount, 'PLN')
+			"p24_sign"        : self.p24.CRC(self.session_key, self.order_id, self.amount, self.currency)
 		}
 
 
