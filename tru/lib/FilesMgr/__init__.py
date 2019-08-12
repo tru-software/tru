@@ -114,9 +114,9 @@ class FileMgr:
 		meta['size'] = len(data)
 		return meta, im
 
-	def CheckFileType(self, fileName, data):
+	def CheckFileType(self, fileName, data, ignoreFileName=False):
 
-		if not self.IsValidExtension(fileName):
+		if not ignoreFileName and not self.IsValidExtension(fileName):
 			raise InputException('file', 'Plik posiada nieprawidłowe rozszerzenie')
 
 		mimetype = magic.from_buffer(data, mime=True) or 'unknown'
