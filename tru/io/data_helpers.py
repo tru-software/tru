@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
-
 import re
 import datetime
 from decimal import Decimal
+from validate_email import validate_email
 
-
-email_re = re.compile(r'^\S+@\S+\.\S+$')
-def IsValidEmail(email):
-	return bool(email_re.match(email))
+# email_re = re.compile(r'^\S+@\S+\.\S+$')
+def IsValidEmail(email, check_mx=True, verify=False):
+	return validate_email(email, check_mx=check_mx, verify=verify)
 
 
 postcode_re = re.compile("^[0-9]{2}\-[0-9]{3}$")
@@ -39,3 +37,18 @@ def IsValidURL(url):
 		pass
 
 	return False
+
+
+# http://blog.tymek.cz/walidacja-numeru-telefonu/
+mobile_valid_re = re.compile("^(?:\(?\+?48)?(?:[-\.\(\)\s]*(\d)){9}\)?$")
+mobile_clean_re = re.compile("[\s\-\/\.\(\)]")
+def IsValidMobile(number):
+
+	if not number:
+		return False
+
+	return bool(mobile_valid_re.match(number))
+
+	
+def CleanMobile(number):
+	return mobile_clean_re.sub("", number)

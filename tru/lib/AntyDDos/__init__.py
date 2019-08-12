@@ -1,6 +1,9 @@
-# -*- coding: utf-8 -*-
-
 from tru.io.converters import getint
+from tru.dj.WebExceptions import AccessException
+
+
+class AntyDDosLimitExceeded(AccessException):
+	pass
 
 
 class AntyDDos:
@@ -11,6 +14,7 @@ class AntyDDos:
 	MAX_CONTEXT_PER_HOUR=10
 	MAX_IP_PER_DAY=200
 	CONTEXT=None
+	ERORR_TITLE = 'Usługa chwilowo niedostępna, prosimy spróbować później'
 
 	def __enter__(self):
 		return self
@@ -23,7 +27,12 @@ class AntyDDos:
 
 	def Check(self, request):
 		return self._check_activity(self.PREFIX, request)
-	
+
+
+	def CheckAndRaise(self, request):
+		if not self.Check(request):
+			raise AntyDDosLimitExceeded(request.user, self.ERORR_TITLE)
+		
 	def Hit(self, request, **kwargs):
 		return self._mark_activity(self.PREFIX, request, **kwargs)
 
@@ -100,3 +109,17 @@ class AntyDDos:
 
 		return True
 
+
+class AntyDDosContext(AntyDDos):
+
+	# __slots__ = ["request"]
+
+	def __init__(self, request=None):
+		self.request = request
+		if request:
+			self.CheckAndRaise(request)
+
+	def __exit__(self, exc_type, exc_value, traceback):
+		if exc_type is None:
+			self.Hit(self.request)
+		return False
