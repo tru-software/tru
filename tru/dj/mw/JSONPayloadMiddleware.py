@@ -14,6 +14,8 @@ def JSONPayloadMiddleware(get_response):
 				request.POST = data
 			elif request.method == 'PUT':
 				request.PUT = data
+			elif request.method == 'DELETE':
+				request.DELETE = data
 
 		response = get_response(request)
 
