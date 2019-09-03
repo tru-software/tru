@@ -2,6 +2,8 @@ import datetime
 import time
 import threading
 import logging
+from contextlib import ContextDecorator
+
 from django.conf import settings
 
 
@@ -19,7 +21,7 @@ def StoreCurrentRequestMiddleware(get_response):
 
 		try:
 			request.CURRENT_TIME = datetime.datetime.now()
-			local_data.request = request
+			SetCurrentRequest(request)
 			return get_response(request)
 		finally:
 			local_data.request = None
@@ -29,6 +31,28 @@ def StoreCurrentRequestMiddleware(get_response):
 
 def GetCurrentRequest():
 	return local_data.request
+
+def SetCurrentRequest(request):
+	global local_data
+	local_data.request = request
+
+
+class UseRequest(ContextDecorator):
+
+	__slots__ = ("request", "old_request")
+
+	def __init__(self, request):
+		self.request = request
+		self.old_request = None
+
+	def __enter__(self):
+		self.old_request = GetCurrentRequest()
+		SetCurrentRequest(self.request)
+		return self
+
+	def __exit__(self, *exc):
+		SetCurrentRequest(self.old_request)
+		return False
 
 
 class Stats:
