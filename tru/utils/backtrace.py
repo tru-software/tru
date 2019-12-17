@@ -76,7 +76,6 @@ def ReadStack(thread_id, frame):
 			request = vars.get('request', None)
 			connection = vars.get('CURRENT_CONNECTION', None)
 
-	for thread_id, frame in list(frames.items()):
 		f = f.f_back
 
 	where = "%s:%s %s()" % (frame.f_code.co_filename, frame.f_lineno, frame.f_code.co_name)
