@@ -186,7 +186,7 @@ def DumpThreads_gevent(sig=None, frame=None):
 				
 				log("  %s" % (where))
 
-				if function != 'DumpThreads':
+				if function != 'DumpThreads_gevent':
 					for name, var in list(f.f_locals.items()):
 						if name not in ('__builtins__', 'self', 'request'):
 							try:
