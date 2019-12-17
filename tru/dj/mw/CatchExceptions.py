@@ -31,12 +31,15 @@ except ImportError:
 
 
 def GetEnvInfo(request=None):
-	r = '';
-	r += 'PID: {} ({})\nHOST: {}\nVERSION: {} (svn: {})\n'.format(os.getpid(), settings.SERVER_ID, hostname, version_number, version_svn_rev)
+
+	r = ''
+	r += f'PID: {os.getpid()}\nSERVER_ID: {getattr(settings, "SERVER_ID", "")}\nDEBUG: {settings.DEBUG}\n'
+	r += f'SERVER_DEV: {getattr(settings, "SERVER_DEV", "")}\nHOST: {hostname}\nVERSION: {version_number} (svn: {version_svn_rev})\n'
 
 	if request is not None:
 		environ = request.environ if hasattr(request, 'environ') else {}
-		profile = request._cached_profile if hasattr(request, '_cached_profile') else None
+		profile = getattr(request, '_cached_profile', None) or getattr(request, '_cached_user', None)
+
 		META = request.META if hasattr(request, 'META') else {}
 		COOKIES = request.COOKIES if hasattr(request, 'COOKIES') else {}
 
@@ -73,7 +76,6 @@ class CatchExceptions:
 		self._page502 = self._load('502.html', status=502)  # HttpResponseServerError
 		self._page503 = self._load('503.html', status=503)  # HttpResponseServiceUnavailable
 
-
 	def _load(self, filename, status):
 
 		path = os.path.join(self.templates_path, filename)
@@ -83,10 +85,8 @@ class CatchExceptions:
 			self._cache[path] = FileInMemory(path=path, always_send=True, status=status)
 			return self._cache[path]
 
-
 	def GetLogger(self, request):
 		return request and hasattr(request, 'current_service') and request.current_service and request.current_service.GetLogger() or log
-
 
 	def __call__(self, request, *args, **kwargs):
 		try:
@@ -169,16 +169,16 @@ class CatchExceptions:
 			return self._page500(request, status=503)
 
 		except SystemExit:
-			pass # See http://code.djangoproject.com/ticket/1023
+			pass  # See http://code.djangoproject.com/ticket/1023
 
 		except Exception as ex:  # Handle everything else
 
 			traceback = FormatTraceback()
 			self.GetLogger(request).exception(GetEnvInfo(request))
 
-			#if settings.DEBUG:
-				#from django.views import debug
-				#return debug.technical_500_response(request, *sys.exc_info())
+			# if settings.DEBUG:
+			# 	from django.views import debug
+			# 	return debug.technical_500_response(request, *sys.exc_info())
 
 			response = self._page502(request)
 			response._exc_details = (ex, traceback)

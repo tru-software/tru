@@ -130,10 +130,10 @@ def AccessLogMiddleware(get_response):
 			elif getattr(response, 'suppress_access_log', False) is not True:
 
 				stats = ' '.join(request.stats.GetParts('T={:.4f}', '{}={}/{:.4f}'))
-				log_access.info('[%s] %s %s %s %s' % (stats, request.META['REMOTE_ADDR'], request.method, request.full_url, status))
+				log_access.info('[%s] %s %s %s %s' % (stats, request.META.get('REMOTE_ADDR', 'NONE'), request.method, request.full_url, status))
 
 			if response and response.status_code == 404:
-				log404.error("%s ('%s'; '%s'; '%s')" % (getattr(response, 'error_msg', 'Unknown error'), request.META['REMOTE_ADDR'], request.full_url, request.META.get('HTTP_USER_AGENT', 'NONE')))
+				log404.error("%s ('%s'; '%s'; '%s')" % (getattr(response, 'error_msg', 'Unknown error'), request.META.get('REMOTE_ADDR', 'NONE'), request.full_url, request.META.get('HTTP_USER_AGENT', 'NONE')))
 
 		return response
 

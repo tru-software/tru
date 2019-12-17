@@ -19,12 +19,15 @@ from django.db import models
 log = logging.getLogger(__name__)
 
 
+def DotPrefix(x):
+	return '.' + x
+
+
 class FileType:
 
 	def __init__(self, mimetype, exts):
-		_ = lambda x: '.'+x
 		self.mimetype = mimetype if isinstance(mimetype, (list, tuple)) else (mimetype, )
-		self.exts = tuple(map(_, exts))
+		self.exts = tuple(map(DotPrefix, exts))
 
 
 class FileMgr:
@@ -33,7 +36,7 @@ class FileMgr:
 
 	class FileExts:
 		AUDIO = FileType('audio/', ('mp3', 'wav', 'm4a', 'mid', 'mpa', 'ra', 'wma', 'ogg'))
-		IMAGE = FileType('image/', ('jpg', 'jpeg', 'png', 'gif', 'bmp', 'mpo'))
+		IMAGE = FileType('image/', ('jpg', 'jpeg', 'png', 'gif', 'bmp', 'mpo', 'webp'))
 		VIDEO = FileType('video/', ('avi', 'flv', 'wmv', 'mp4', 'mov', 'ogv', 'm4v', 'mpg', 'mp2', 'mpeg', 'mpe', 'mpv'))
 		EXCEL = FileType(('application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/octet-stream', 'application/vnd.ms-office', 'application/vnd.oasis.opendocument.spreadsheet'), ('xls', 'xlsx', 'odt'))
 		WORD  = FileType(('application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.oasis.opendocument.text'), ('doc', 'docx', 'ods'))
@@ -42,7 +45,7 @@ class FileMgr:
 		XML   = FileType(('application/xml','text/xml'), ('xml', ))
 
 	ALLOWED_TYPES = [FileExts.IMAGE, FileExts.AUDIO]
-	ALLOWED_IMAGE_FORMATS = dict(JPEG='.jpg', PNG='.png', GIF='.gif', BMP='.bmp', MPO='.jpeg')
+	ALLOWED_IMAGE_FORMATS = dict(JPEG='.jpg', PNG='.png', GIF='.gif', BMP='.bmp', MPO='.jpeg', WEBP='.webp')
 	FILE_UPLOAD_MAX_SIZE = settings.FILE_UPLOAD_MAX_MEMORY_SIZE
 	UPLOAD_DIR = settings.UPLOAD_DIR
 	NAMESPACE = "uploads-tmp"
