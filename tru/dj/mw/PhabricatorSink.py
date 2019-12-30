@@ -159,8 +159,7 @@ def PhabricatorSink(get_response):
 
 		response = get_response(request)
 
-		# if not settings.DEBUG and response.status_code >= 500 and response.status_code <= 599 and not hasattr(response, "skip_bug_report"):
-		if response.status_code >= 500 and response.status_code <= 599 and not hasattr(response, "skip_bug_report") and getattr(request, "_exception_reported", False) is not True:
+		if not settings.DEBUG and response.status_code >= 500 and response.status_code <= 599 and not hasattr(response, "skip_bug_report") and getattr(request, "_exception_reported", False) is not True:
 
 			try:
 				if hasattr(response, '_exc_details'):
