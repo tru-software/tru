@@ -520,8 +520,8 @@ def ImageExternalOpt(image_path, params={}):
 		pargs = ['gifsicle', '-i', '-j4', '-b', '-O3', '-o', output, image_path]
 		process = subprocess.Popen(pargs, stdout=subprocess.PIPE)
 	elif mimetype == 'image/webp':
-		# TODO: ???
-		pass
+		pargs = ['cwebp', '-quiet', '-q', f'{quality}', '-m', '6', '-mt', '-o', output, image_path]
+		process = subprocess.Popen(pargs, stdout=subprocess.PIPE)
 	else:
 		raise ValueError('Unsupported image type "{}": "{}"'.format(mimetype, image_path))
 
