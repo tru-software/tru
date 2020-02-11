@@ -156,13 +156,13 @@ class SuccessResponse:
 
 		data = self.GetData()
 
-		#Odpowiedź dla transakcji poprawnie zweryfikowanej:
-		#error=0
-		#Odpowiedź z błędem:
-		#error={KOD_BŁĘDU}&errorMessage=field1:desc1&field1:desc2...
-		#errorMessage może zawierać informacje dotyczące wielu błędów.
+		# Odpowiedź dla transakcji poprawnie zweryfikowanej:
+		# error=0
+		# Odpowiedź z błędem:
+		# error={KOD_BŁĘDU}&errorMessage=field1:desc1&field1:desc2...
+		# errorMessage może zawierać informacje dotyczące wielu błędów.
 
-		#przychodzi też potwierdzenie w formacie: "RESULT\r\nTRUE" - być może to dotyczy starych transakcji
+		# przychodzi też potwierdzenie w formacie: "RESULT\r\nTRUE" - być może to dotyczy starych transakcji
 
 		verify_url = self.p24.PRZELEWY24_URL + '/trnVerify'
 		content = self.Request(verify_url, data)
@@ -177,7 +177,7 @@ class SuccessResponse:
 			if content == 'TRUE':
 				return True
 
-			VerifyErrorException(content, '')
+			raise VerifyErrorException(content, '')
 		else:
 			params = urllib.parse.parse_qs(content)
 
@@ -210,8 +210,8 @@ class ErrorResponse:
 
 		self.p24 = p24
 
-		#if P['p24_crc'] != CRC( P['p24_session_id'], P['p24_order_id'], P['p24_kwota']):
-		#	raise InputDataException( 'p24_crc', u'Nieprawidłowa suma kontrolna' )
+		# if P['p24_crc'] != CRC( P['p24_session_id'], P['p24_order_id'], P['p24_kwota']):
+		# 	raise InputDataException( 'p24_crc', u'Nieprawidłowa suma kontrolna' )
 
 		if str(P['p24_merchant_id']) != str(self.p24.PRZELEWY24_ID):
 			raise InputDataException('p24_crc', 'Nieprawidłowy identyfikator sprzedawcy {}'.format(P['p24_merchant_id']))
@@ -226,4 +226,3 @@ class ErrorResponse:
 
 	def GetOrderId(self):
 		return self.order_id
-
