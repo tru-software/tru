@@ -37,6 +37,7 @@ class ImageResponse(StreamingHttpResponse):
 		'PNG': "image/png",
 		'JPEG': "image/jpeg",
 		'GIF': "image/gif",
+		'WEBP': "image/webp",
 	}
 
 	STREAM_CHUNK_SIZE = 4096
