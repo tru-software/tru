@@ -31,7 +31,6 @@ POOL = None
 LIMIT_DAILY_REPORTS = 200
 LIMIT_HOURLY_REPORTS = 20
 
-
 log = logging.getLogger(__name__)
 
 maniphest = settings.PHABRICATOR_SINK['maniphest']
@@ -207,7 +206,7 @@ def PhabricatorSink(get_response):
 
 		response = get_response(request)
 
-		if not settings.DEBUG and response.status_code >= 500 and response.status_code <= 599 and not hasattr(response, "skip_bug_report") and getattr(request, "_exception_reported", False) is not True:
+		if PhabricatorSink.ReportThisAction(request, response):
 
 			try:
 				if hasattr(response, '_exc_details'):
@@ -223,3 +222,10 @@ def PhabricatorSink(get_response):
 		return response
 
 	return process_request
+
+
+def ReportThisAction(request, response, debug=settings.DEBUG):
+	return not debug and response.status_code >= 500 and response.status_code <= 599 and not hasattr(response, "skip_bug_report") and getattr(request, "_exception_reported", False) is not True
+
+
+PhabricatorSink.ReportThisAction = ReportThisAction
