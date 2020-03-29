@@ -20,14 +20,12 @@ from .thumbs import Operations
 
 log = logging.getLogger(__name__)
 
-# -------------------------------------------------------------------
-
 
 class VideoFormat:
 
 	formats = (
 		# ID, MimeType, File Ext, ffmpeg -format
-		(0x02, "video/mp4", "mp4", "mp4"), # MP4 (MPEG-4 Part 14)
+		(0x02, "video/mp4", "mp4", "mp4"),  # MP4 (MPEG-4 Part 14)
 		(0x03, "video/flv", "flv", "flv"),  # FLV (Flash Video)
 		(0x04, "video/avi", "avi", "avi"),  # AVI (Audio Video Interleaved)
 		(0x05, "video/wmv", "wmv", None),
@@ -40,7 +38,6 @@ class VideoFormat:
 	formats_by_id = {tpl[0]: tpl for tpl in formats}
 	formats_by_mimetype = {tpl[1]: tpl for tpl in formats}
 	formats_by_ext = {tpl[2]: tpl for tpl in formats}
-
 
 	def __init__(self, video_size, audio=None, format=None, fps=None, mimetype=None):
 		self.video_size = video_size
@@ -65,7 +62,7 @@ class VideoFormat:
 			return (w, h)
 
 		def type_name(self):
-			d={}
+			d = {}
 			self.get_params(d)
 			return d['thumb_type']
 
@@ -89,7 +86,6 @@ class VideoFormat:
 		def GetNoPictureSizeInts(self):
 			return (77, 77)
 
-
 	class Original(ThumbSize):
 
 		op_code = 0x01
@@ -112,7 +108,6 @@ class VideoFormat:
 
 		def _getOpParams(self):
 			return pack('!B', 0x44)
-
 
 	class MaxBox(ThumbSize, Operations.MaxBox):
 
@@ -145,12 +140,11 @@ class VideoFormat:
 	classes = [
 		Original, MaxBox
 	]
-	classes_map = {i.op_code:i for i in classes}
-	classes_map_by_name = {i.__name__:i for i in classes}
+	classes_map = {i.op_code: i for i in classes}
+	classes_map_by_name = {i.__name__: i for i in classes}
 	classes_map_by_name['Org'] = Original
 
-	url_fmt_re = re.compile('^[0-9a-zA-Z_\-=]+$')
-
+	url_fmt_re = re.compile(r'^[0-9a-zA-Z_\-=]+$')
 
 	def Encode(self, filename, key, **kwargs):
 
@@ -165,13 +159,12 @@ class VideoFormat:
 
 		trx = pack('!BBBBB', encoder_version, format_id, self.video_size.op_code, self.audio or 0, self.fps or 0) + self.video_size._getOpParams()
 
-		if (len(trx)+4) % 3:
-			trx += pack('!B', 0) * (3-((len(trx)+4) % 3))
+		if (len(trx) + 4) % 3:
+			trx += pack('!B', 0) * (3 - ((len(trx) + 4) % 3))
 
 		# The filename here is a url-encoded path.
 		trx_hash = Hash32(key + trx + filename.encode('ascii'))
 		return urlsafe_b64encode(trx + pack('!I', trx_hash)).decode('ascii')
-
 
 	@classmethod
 	def Decode(cls, data, filename, key):
@@ -205,14 +198,13 @@ class VideoFormat:
 
 		return conv
 
-
 	def GetCmd(self, path):
 		cmd = [
-	        'ffmpeg',
+			'ffmpeg',
 			"-y",
-	        '-i', path,
+			'-i', path,
 			'-sn',  # disable subtitle
-			'-framerate', str(self.fps),  #  number     set the number of video frames to output
+			'-framerate', str(self.fps),  # number     set the number of video frames to output
 		]
 
 		w, h = self.video_size.get_size()
@@ -249,7 +241,7 @@ class VideoFormat:
 		ext = (self.formats_by_mimetype.get(self.format) or self.formats_by_id[0x02])[2]
 		return path_replace_ext(path, ext, postfix)
 
-	def GenerateAsStream(self, src_path, cmd, bs=1024*4):
+	def GenerateAsStream(self, src_path, cmd, bs=1024 * 4):
 		log.info("Generating video: {}".format(" ".join(map(str, cmd))))
 		with subprocess.Popen(cmd, stdout=subprocess.PIPE) as ffmpeg:
 				fd = ffmpeg.stdout.fileno()
@@ -257,7 +249,6 @@ class VideoFormat:
 					r, w, e = select.select([fd], [], [])
 					if fd in r:
 						yield os.read(fd, bs)
-						
 
 	def GenerateAsStreamAndSave(self, src_path, video_path):
 		try:
@@ -292,7 +283,7 @@ def GetVideoMeta(path):
 	for stream in data.get('streams') or []:
 		if 'duration' in stream:
 			response['duration'] = max(response['duration'], float(stream.get('start_time', 0)) + float(stream['duration']))
-		
+
 		if stream.get('codec_type') == "audio":
 			response['audio'] = {i: stream.get(i) for i in ('codec_name', 'codec_long_name', 'profile', 'sample_rate', 'channels', 'channel_layout', 'bit_rate', 'nb_frames')}
 		elif stream.get('codec_type') == "video":
@@ -316,8 +307,8 @@ def ExtractFrame(path, output, at=0.0, quality=1):
 	command = [
 		"ffmpeg",
 		"-y",
-	    #"-loglevel", "quiet",
-	    #"-print_format", "json",
+		# "-loglevel", "quiet",
+		# "-print_format", "json",
 		'-ss', str(float(at)),
 		'-i', path,
 		'-qscale:v', str(quality),
@@ -337,15 +328,15 @@ def ExtractFrame(path, output, at=0.0, quality=1):
 
 def ffprobe_get_format(path):
 
-    command = [
+	command = [
 		"ffprobe",
-	    "-loglevel",  "quiet",
-	    "-print_format", "json",
-	    "-show_format",
-	    "-show_streams",
-	    path
+		"-loglevel", "quiet",
+		"-print_format", "json",
+		"-show_format",
+		"-show_streams",
+		path
 	]
 
-    pipe = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    out, err = pipe.communicate()
-    return json.loads(out)
+	pipe = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	out, err = pipe.communicate()
+	return json.loads(out)

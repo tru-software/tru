@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import logging
 import settings
 import itertools
@@ -40,7 +38,7 @@ class ActionWrapper(object):
 
 				if hasattr(self.func, "_attr_ajax"):
 					if not route:
-						route = Route('/webapi/{}/{}'.format( obj.__class__.__name__, name))
+						route = Route('/webapi/{}/{}'.format(obj.__class__.__name__, name))
 
 					self._attr_ajax = self.func._attr_ajax
 
@@ -52,7 +50,6 @@ class ActionWrapper(object):
 			self.func = func
 			self.route = func
 			self.proc = func.Execute
-
 
 	def __call__(self, *args, **kwargs):
 		return self.proc(*args, **kwargs)
@@ -70,12 +67,11 @@ class ActionWrapper(object):
 		return self.route(*args, **kwargs)
 
 	def Redirect(self, *args, **kwargs):
-		return HttpResponseRedirect( self.route(*args, **kwargs) )
+		return HttpResponseRedirect(self.route(*args, **kwargs))
 
 	def RedirectWithJavaScript(self, *args, **kwargs):
-		return RedirectWithJavaScriptResponse( self.route(*args, **kwargs) )
+		return RedirectWithJavaScriptResponse(self.route(*args, **kwargs))
 
-# ----------------------------------------------------------------------------
 
 class ThreadSafeData(local):
 
@@ -91,17 +87,14 @@ class ThreadSafeData(local):
 		self.queries_counter += cnt
 		self.queries_timer += tm
 
-# ----------------------------------------------------------------------------
 
 class WebManagerClass(object):
 
 	_instance = None
 
-	# ----------------------------------------------------------------------------
-
-	def __new__(type):
+	def __new__(cls):
 		if not WebManagerClass._instance:
-			WebManagerClass._instance = object.__new__(type)
+			WebManagerClass._instance = object.__new__(cls)
 			self = WebManagerClass._instance
 			self.WebAppsByPaths = {}  # klasy komponentów (WebApplication + WebPart) class_path => object
 			self.WebAppsByNames = {}  # klasy komponentów (WebApplication) class_name => object
@@ -112,8 +105,6 @@ class WebManagerClass(object):
 
 		return WebManagerClass._instance
 
-	# ----------------------------------------------------------------------------
-
 	def register(self, comp_class):
 
 		import utils as utils
@@ -121,8 +112,8 @@ class WebManagerClass(object):
 
 		obj = comp_class()
 		class_path = utils.GetClassPath(comp_class)
-		self.WebAppsByPaths[ class_path ] = obj
-		self.WebAppsByNames[ comp_class.__name__ ] = obj
+		self.WebAppsByPaths[class_path] = obj
+		self.WebAppsByNames[comp_class.__name__] = obj
 
 		for name, func in list(comp_class.__dict__.items()):
 
@@ -136,56 +127,48 @@ class WebManagerClass(object):
 				functools.update_wrapper(wrapper, getattr(obj, name))
 				setattr(obj, name, wrapper)
 
-	# ----------------------------------------------------------------------------
-
 	def build_views(self):
 		from .view import IView
 
 		for comp_class in list(self.WebAppsByPaths.values()):
-			meta_class = comp_class.__class__.__dict__.get("Views",None)
+			meta_class = comp_class.__class__.__dict__.get("Views", None)
 			if meta_class:
 				for member_name in meta_class.__dict__:
 					member = meta_class.__dict__[member_name]
-					if isinstance( member, IView ):
-						member.build( member_name, comp_class )
-
-	# ----------------------------------------------------------------------------
+					if isinstance(member, IView):
+						member.build(member_name, comp_class)
 
 	def build_routes(self):
 
-		all_routes=[]
+		all_routes = []
 
 		for comp in list(self.WebAppsByPaths.values()):
 			comp._sorted_routes = []
 			for member_name in comp.__dict__:
 				member = getattr(comp, member_name)
-				if isinstance( member, ActionWrapper ) and member.route:
-					member.route.build( member_name, comp )
-					comp._sorted_routes.append( member.route )
-			comp._sorted_routes.sort( key=lambda r: r._order )
+				if isinstance(member, ActionWrapper) and member.route:
+					member.route.build(member_name, comp)
+					comp._sorted_routes.append(member.route)
+			comp._sorted_routes.sort(key=lambda r: r._order)
 
 			all_routes.extend(comp._sorted_routes)
 
-		all_routes.sort( key=lambda r: r._order )
+		all_routes.sort(key=lambda r: r._order)
 
-		list(map( self.append_route, all_routes ))
-
-	# ----------------------------------------------------------------------------
+		list(map(self.append_route, all_routes))
 
 	def append_route(self, route):
 
-		self._all_routes[ route._component.__class__.__name__ + "." + route._name ] = route
+		self._all_routes[route._component.__class__.__name__ + "." + route._name] = route
 
-		self._routes.connect (
-			route._component.__class__.__name__ + "." + route._name, #route._name,
+		self._routes.connect(
+			route._component.__class__.__name__ + "." + route._name,  # route._name,
 			route._url,
 			controller=route._component.__class__.__name__,
 			action=route._action_name,
 			requirements=route._requirements,
 			**route._route_params
 		)
-
-	# ----------------------------------------------------------------------------
 
 	def FindRoute(self, request):
 
@@ -204,48 +187,38 @@ class WebManagerClass(object):
 		request.environ['routes.route'] = config.route
 		return config
 
-	# ----------------------------------------------------------------------------
+	def GetCurrentRoute(self, request, route_name, url_params):
 
-	def GetCurrentRoute(self, request, route_name, url_params ):
-
-		routes_names = [x for x,y in list(self._routes._routenames.items()) if y == route_name]
+		routes_names = [x for x, y in list(self._routes._routenames.items()) if y == route_name]
 		if len(routes_names) > 0:
 			try:
 				route = self._all_routes.get(routes_names[0], None)
 				if route:
 					all_args = {}
-					for x,y in list(request.GET.items()):
-						all_args[ str(x) ] = y
-					for x,y in list(url_params.items()):
-						all_args[ str(x) ] = y
-					all_args.pop( 'controller', None )
-					all_args.pop( 'action', None )
-					return route, route.clone( **all_args )
+					for x, y in list(request.GET.items()):
+						all_args[str(x)] = y
+					for x, y in list(url_params.items()):
+						all_args[str(x)] = y
+					all_args.pop('controller', None)
+					all_args.pop('action', None)
+					return route, route.clone(**all_args)
 			except Exception as ex:
 				if settings.DEBUG:
 					raise
-				log.error('Cannot create current_ucr: %s' % ex.message )
+				log.error('Cannot create current_ucr: %s' % ex.message)
 		return None, None
 
-	# ----------------------------------------------------------------------------
-
 	def get(self, class_name):
-		obj = self.WebAppsByPaths.get( class_name, None )
+		obj = self.WebAppsByPaths.get(class_name, None)
 		return obj
-
-	# ----------------------------------------------------------------------------
 
 	def StartRequest(self, request):
 		self.Local.request = request
 		self.Local.queries_counter = 0
 		self.Local.queries_timer = 0.0
 
-	# ----------------------------------------------------------------------------
-
 	def FinishRequest(self, request):
 		self.Local.request = None
-
-	# ----------------------------------------------------------------------------
 
 
 WebMgr = WebManagerClass()

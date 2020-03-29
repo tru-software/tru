@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
-
 import datetime
+import logging
 
 import settings
+
 
 def CurrentDatetimeMiddleware:
 
@@ -51,4 +51,3 @@ def CurrentDatetimeMiddleware:
 		return get_response(request)
 
 	return process_request
-

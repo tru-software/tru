@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
-
 import re
 
 from django.conf import settings
 from django.urls.resolvers import URLResolver, RegexPattern
 from django.urls import Resolver404
 from django.http import Http404, HttpResponseNotFound
+
 
 def StaticContentMiddleware(get_response):
 

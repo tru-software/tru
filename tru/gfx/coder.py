@@ -6,7 +6,9 @@ import collections
 from struct import pack, unpack
 from base64 import urlsafe_b64decode, urlsafe_b64encode
 
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
 from urllib.parse import quote
 
 from ..fs.utils import path_replace_ext
@@ -15,8 +17,6 @@ from .thumbs import Operations
 
 
 class ImageType(object):
-
-	# ---------------------------------------------------------------------------------------
 
 	class ThumbSize(object):
 
@@ -29,7 +29,7 @@ class ImageType(object):
 			return (w, h)
 
 		def type_name(self):
-			d={}
+			d = {}
 			self.get_params(d)
 			return d['thumb_type']
 
@@ -53,7 +53,6 @@ class ImageType(object):
 		def GetNoPictureSizeInts(self):
 			return (77, 77)
 
-
 	class Original(ThumbSize):
 
 		op_code = 0x01
@@ -76,7 +75,6 @@ class ImageType(object):
 
 		def _getOpParams(self):
 			return pack('!B', 0x44)
-
 
 	class FitWidth(ThumbSize, Operations.FitWidth):
 
@@ -110,7 +108,6 @@ class ImageType(object):
 		def GetNoPictureSizeInts(self):
 			return self.w, self.h
 
-
 	class FitAll(ThumbSize, Operations.FitAll):
 
 		op_code = 0x03
@@ -139,31 +136,31 @@ class ImageType(object):
 			if img_w <= thumb_w and img_h <= thumb_h:
 				return None
 
-			if float(img_w)/img_h <= float(thumb_w)/thumb_h:
-				ratio = float(thumb_w)/img_w
-				w, h = thumb_w, int(img_h*ratio)
+			if float(img_w) / img_h <= float(thumb_w) / thumb_h:
+				ratio = float(thumb_w) / img_w
+				w, h = thumb_w, int(img_h * ratio)
 				x, y = int(x * ratio), int(y * ratio)
 
-				half_h = (thumb_h/2)
+				half_h = (thumb_h / 2)
 				if y < half_h:
 					y = half_h
 				elif y > (h - half_h):
 					y = (h - half_h)
 
-				crop = (0, y-half_h, thumb_w, thumb_h)
+				crop = (0, y - half_h, thumb_w, thumb_h)
 
 			else:
-				ratio = float(thumb_h)/img_h
-				w, h = int(img_w*ratio), thumb_h
+				ratio = float(thumb_h) / img_h
+				w, h = int(img_w * ratio), thumb_h
 				x, y = int(x * ratio), int(y * ratio)
 
-				half_w = (thumb_w/2)
+				half_w = (thumb_w / 2)
 				if x < half_w:
 					x = half_w
 				elif x > (w - half_w):
 					x = (w - half_w)
 
-				crop = (x-half_w, 0, thumb_w, thumb_h)
+				crop = (x - half_w, 0, thumb_w, thumb_h)
 
 			return ImageType.Manual(w, h, crop)
 
@@ -176,7 +173,6 @@ class ImageType(object):
 
 		def GetNoPictureSizeInts(self):
 			return self.w, self.h
-
 
 	class Force(ThumbSize, Operations.Force):
 
@@ -206,7 +202,6 @@ class ImageType(object):
 		def GetNoPictureSizeInts(self):
 			return self.w, self.h
 
-
 	class MaxBox(ThumbSize, Operations.MaxBox):
 
 		op_code = 0x05
@@ -235,7 +230,6 @@ class ImageType(object):
 		def GetNoPictureSizeInts(self):
 			return self.w, self.h
 
-
 	class Manual(ThumbSize, Operations.Manual):
 
 		op_code = 0x06
@@ -250,7 +244,7 @@ class ImageType(object):
 			if self.c:
 				d['crop_info'] = dict(left=self.c[0], top=self.c[1], width=self.c[2], height=self.c[3])
 
-		def calcCropSizeFrom(self,w, h, best_case=False):
+		def calcCropSizeFrom(self, w, h, best_case=False):
 			raise NotImplementedError('Ciekawe kiedy to jest wywoływane')
 
 		def get_size(self):
@@ -283,10 +277,7 @@ class ImageType(object):
 		def GetNoPictureSizeInts(self):
 			return self.get_size()
 
-	# ---------------------------------------------------------------------------------------
-
-	def __init__(self, id, thumb, format='JPEG', descr='', watermark=False, prefix='w', restricted=False,
-				metadata=False, progressive=True, quality=95, optimize=True):
+	def __init__(self, id, thumb, format='JPEG', descr='', watermark=False, prefix='w', restricted=False, metadata=False, progressive=True, quality=95, optimize=True):
 		self.id = id
 		self.thumb = thumb
 		self.descr = descr
@@ -361,18 +352,17 @@ class ImageType(object):
 			img_w, img_h = i.GetFinalSize(img_w, img_h)
 		return img_w, img_h
 
-
 	def PublicId(self):
 		return self.prefix + str(self.id)
 
 	classes = [
 		Original, FitAll, FitWidth, Force, MaxBox, Manual
 	]
-	classes_map = {i.op_code:i for i in classes}
-	classes_map_by_name = {i.__name__:i for i in classes}
+	classes_map = {i.op_code: i for i in classes}
+	classes_map_by_name = {i.__name__: i for i in classes}
 	classes_map_by_name['Org'] = Original
 
-	url_fmt_re = re.compile('[0-9a-zA-Z_\-=]+')
+	url_fmt_re = re.compile(r'[0-9a-zA-Z_\-=]+')
 
 	@staticmethod
 	def Decode(data, filename, key):
@@ -485,8 +475,8 @@ class ImageType(object):
 
 		trx = pack('!BBBbbb', format, self.save_to.quality, self.thumb.op_code, color, contrast, brightness) + self.thumb._getOpParams()
 
-		if ((len(trx)+4) % 3):
-			trx += pack('!B', 0) * (3-((len(trx)+4) % 3))
+		if ((len(trx) + 4) % 3):
+			trx += pack('!B', 0) * (3 - ((len(trx) + 4) % 3))
 
 		trx_hash = Hash(key + trx + filename.encode('utf8')) & 0xFFFFFFFF
 		return urlsafe_b64encode(trx + pack('!I', trx_hash)).decode('ascii')
@@ -545,7 +535,7 @@ class ImageType(object):
 		if not self.thumb:
 			return (77, 77)
 		return self.thumb.GetNoPictureSizeInts()
-	
+
 	@staticmethod
 	def GetExtFromPath(img):
 		if not img:
@@ -579,7 +569,6 @@ class ImageType(object):
 	def __str__(self):
 		return 'ImageType.{}({}, {})'.format(self.thumb.__class__.__name__, self.id, self.get_params())
 
-# -------------------------------------------------------------------------------------------
 
 class CustomImageType(ImageType):
 
@@ -587,7 +576,6 @@ class CustomImageType(ImageType):
 		super(CustomImageType, self).__init__(*args, **kwargs)
 		self.is_custom = True
 
-# -------------------------------------------------------------------------------------------
 
 class DynamicImageType(ImageType):
 
@@ -595,7 +583,6 @@ class DynamicImageType(ImageType):
 		super(DynamicImageType, self).__init__(0, *args, **kwargs)
 		self.is_custom = True
 
-# -------------------------------------------------------------------------------------------
 
 class TemporaryImageType(ImageType):
 
@@ -620,4 +607,3 @@ class TemporaryImageType(ImageType):
 			self.brightness = params['brightness']
 
 		self.deprecated = True
-

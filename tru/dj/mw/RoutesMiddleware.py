@@ -15,6 +15,7 @@ log_access = logging.getLogger('Access')
 
 # ----------------------------------------------------------------------------
 
+
 def FindRouteMiddleware(get_response):
 
 	@CatchExceptions
@@ -62,6 +63,7 @@ def FindRouteMiddleware(get_response):
 
 # ----------------------------------------------------------------------------
 
+
 def ExecuteRouteMiddleware(get_response):
 
 	@CatchExceptions
@@ -95,11 +97,11 @@ def ExecuteRouteMiddleware(get_response):
 			if request.method == 'GET':
 				return HttpResponseRedirect(FW.WebMgr.WebAppsByNames['MainPage'].Index.Link(login=request.full_url_protocol))
 			# elif request.method == 'POST':
-			#	return FW.HttpResponseRedirect(FW.WebMgr.WebAppsByNames['MainPage'].Index.Link())
+			# 	return FW.HttpResponseRedirect(FW.WebMgr.WebAppsByNames['MainPage'].Index.Link())
 			return HttpResponse(status=401)
 
 		# if request.user is None and getattr(func, '_attr_unlogged_required', False) != True:
-		#	return FW.HttpResponseRedirect( FW.WebMgr.WebAppsByNames['Auth'].LoginPage.Link(url=request.current_route(ABS_URL=True)) )
+		# 	return FW.HttpResponseRedirect( FW.WebMgr.WebAppsByNames['Auth'].LoginPage.Link(url=request.current_route(ABS_URL=True)) )
 
 		try:
 			response = ctrl_instance._execute_action(request, func)

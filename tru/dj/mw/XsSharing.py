@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*-
 
-import settings
+from django.conf import settings
+from django.http import HttpResponse
+
 
 def XsSharing(get_response):
 
@@ -10,7 +11,7 @@ def XsSharing(get_response):
 	def middleware(request):
 
 		if 'HTTP_ACCESS_CONTROL_REQUEST_METHOD' in request.META:
-			response = http.HttpResponse()
+			response = HttpResponse()
 			response['Access-Control-Allow-Origin'] = XS_SHARING_ALLOWED_ORIGINS
 			response['Access-Control-Allow-Methods'] = XS_SHARING_ALLOWED_METHODS
 			return response

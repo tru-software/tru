@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
-######################################################################
-##                                                                  ##
-##             Copyright (c) 2011, Tomasz Hławiczka                 ##
-##                       All Rights Reserved.                       ##
-##                                                                  ##
-##             http://www.tru.pl                                    ##
-##                                                                  ##
-######################################################################
+####################################################################
+#                                                                  #
+#             Copyright (c) 2011, Tomasz Hławiczka                 #
+#                       All Rights Reserved.                       #
+#                                                                  #
+#             http://www.tru.pl                                    #
+#                                                                  #
+####################################################################
 
 import logging
 import settings
@@ -20,10 +19,10 @@ import json
 from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotModified
 from mako import filters
 
-from .mgr   import WebMgr
+from .mgr import WebMgr
 from .route import IRoute
-from .view  import IView, ViewResponse
-from .attr  import WebAttr
+from .view import IView, ViewResponse
+from .attr import WebAttr
 from ..WebExceptions import *
 
 from tru.utils.backtrace import GetTraceback
@@ -31,69 +30,53 @@ from tru.dj.responses import NoCacheHttpResponse
 
 log = logging.getLogger(__name__)
 
-# ----------------------------------------------------------------------------
 
 class ApplicationMeta(type):
 
 	def __new__(cls, name, bases, d):
 		new_class = type.__new__(cls, name, bases, d)
 
-		new_class._register( new_class )
+		new_class._register(new_class)
 		return new_class
 
-# ----------------------------------------------------------------------------
 
 class Application(object, metaclass=ApplicationMeta):
 
-	_instance       = None
+	_instance = None
 
-	# ----------------------------------------------------------------------------
+	def __new__(cls):
+		if not cls._instance:
+			cls._instance = object.__new__(cls)
 
-	def __new__(type):
-		if not type._instance:
-			type._instance = object.__new__(type)
-
-		return type._instance
-
-	# ----------------------------------------------------------------------------
+		return cls._instance
 
 	def __str__(self):
 		return self.__class__.__name__
 
-	# ----------------------------------------------------------------------------
-
 	@staticmethod
 	def _register(new_class):
-		if not new_class.__name__ in ('Application', 'WebApplication', 'AdminApplication'):
+		if new_class.__name__ not in ('Application', 'WebApplication', 'AdminApplication'):
 			WebMgr.register(new_class)
 
-	# ----------------------------------------------------------------------------
-
 	def class_path(self):
-		return "%s.%s"%(self.__module__,self.__class__.__name__)
-
-	# ----------------------------------------------------------------------------
+		return "%s.%s" % (self.__module__, self.__class__.__name__)
 
 	def AjaxExceptionHandler(self, request, ex):
 		if settings.DEBUG:
-			return NoCacheHttpResponse( """%s<br/>Internal error: DEBUG: <b>%s</b><br/>
+			return NoCacheHttpResponse("""%s<br/>Internal error: DEBUG: <b>%s</b><br/>
 				<a href="#" onclick="$(this).parent().load('/webapi', %s); return false;">Try again!</a>""" %
-				( request.CURRENT_TIME.strftime('%Y-%m-%d %H:%M:%S'), filters.html_escape(str(ex)), filters.html_escape(json.dumps(request.POST) )) )
+					(request.CURRENT_TIME.strftime('%Y-%m-%d %H:%M:%S'), filters.html_escape(str(ex)), filters.html_escape(json.dumps(request.POST))))
 		return NoCacheHttpResponse('Internal error!')
-
-	# ----------------------------------------------------------------------------
 
 	def _find_action(self, request, action_name):
 
 		func = getattr(self, action_name, None)
 
-		if func is None: # not isinstance(func, types.MethodType):
-			log.error("Cannot find %r method (pointed by routes) in ctrl class %r for handling response", action_name, self )
+		if func is None:  # not isinstance(func, types.MethodType):
+			log.error("Cannot find %r method (pointed by routes) in ctrl class %r for handling response", action_name, self)
 			raise NotImplementedError('Action %r is not implemented' % action_name)
 
 		return func
-
-	# ----------------------------------------------------------------------------
 
 	_default_json_error = {'error': 'Usługa jest chwilowo niedostępna. Prosimy spróbować później.', 'type': 'Internal'}
 
@@ -130,9 +113,6 @@ class Application(object, metaclass=ApplicationMeta):
 
 		return r
 
-	# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
 
 class FakeWebRequest(object):
 
@@ -147,5 +127,3 @@ class FakeWebRequest(object):
 		self.CURRENT_TIME = datetime.datetime.now()
 		self.IsBot = False
 		self.force_service = True
-
-# ----------------------------------------------------------------------------

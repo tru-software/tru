@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from pathlib import Path
 from django.conf import settings
 import logging
@@ -20,7 +18,7 @@ log = logging.getLogger(__file__)
 class ServiceTheme:
 
 	PROPS = {
-		'Name'                 : None,
+		'Name': None,
 	}
 
 	DEBUG = settings.DEBUG
@@ -45,7 +43,6 @@ class ServiceTheme:
 		if not os.path.isfile(self.favicon_path):
 			raise IOError(f'File "{self.favicon_path}" is missing')
 
-
 		self.style = getattr(mod, 'style', None) or 'service.css'
 		self.script = None
 
@@ -64,7 +61,7 @@ class ServiceTheme:
 			self.script_url = filestamp.Mark(self.script, dir=str(self.path), netloc=self.url, debug=self.DEBUG)
 
 		self._touchicons_code = ''
-		self._touchicons_files = {} # dict: '57x57' (attr "sizes") => '/static/themes/../apple-touch-icon-precomposed.png' (attr "href")
+		self._touchicons_files = {}  # dict: '57x57' (attr "sizes") => '/static/themes/../apple-touch-icon-precomposed.png' (attr "href")
 		self.theme_script_url = ''
 		self.theme_css_url = ''
 
@@ -87,7 +84,7 @@ class ServiceTheme:
 		self.OnLoadTheme(mod)
 
 	def ImportProps(self, mod):
-		for k,v in list(self.PROPS.items()):
+		for k, v in list(self.PROPS.items()):
 			setattr(self, k, getattr(mod, k, v))
 
 	def OnLoadTheme(self, mod):
@@ -146,13 +143,13 @@ class ServiceTheme:
 	def GetThemeScriptURL(self, request):
 		return self.theme_script_url
 
-	
 	def __str__(self):
 		return '{}("{}")'.format(self.__class__.__name__, self.path)
 
 # ------------------------------------------------------------------------
 # ------------------------------------------------------------------------
 # ------------------------------------------------------------------------
+
 
 class ServiceThemeMgrClass(object):
 
@@ -181,17 +178,16 @@ class ServiceThemeMgrClass(object):
 		for themes_dir, themes_url in basedirs:
 
 			for theme_dir in os.listdir(themes_dir):
-				theme_path = os.path.join(themes_dir,theme_dir)
-				theme_url = themes_url+'/'+theme_dir
-				if not os.path.isdir(theme_path) or not os.path.isfile(os.path.join(theme_path, '__init__.py' )):
+				theme_path = os.path.join(themes_dir, theme_dir)
+				theme_url = themes_url + '/' + theme_dir
+				if not os.path.isdir(theme_path) or not os.path.isfile(os.path.join(theme_path, '__init__.py')):
 					continue
 
-				mod = imp.load_source('service_theme_%s' % (theme_dir,), os.path.join(theme_path, '__init__.py' ))
+				mod = imp.load_source('service_theme_%s' % (theme_dir,), os.path.join(theme_path, '__init__.py'))
 
 				theme = ServiceTheme(theme_dir, theme_path, theme_url, mod)
 				self.themes[theme_dir] = theme
 				self.themes_by_url[theme_url] = theme
-
 
 		self.default = self.themes.get('default')
 
@@ -199,8 +195,8 @@ class ServiceThemeMgrClass(object):
 		self._themes_list_mobile.sort()
 
 	def GetThemes(self, allow_limited=False):
-		collection = list(self.themes.values()) if allow_limited else [ i for i in list(self.themes.values()) if not i.is_limited ]
-		return sorted( collection, key=lambda theme: theme.name )
+		collection = list(self.themes.values()) if allow_limited else [i for i in list(self.themes.values()) if not i.is_limited]
+		return sorted(collection, key=lambda theme: theme.name)
 
 	def GetThemesList(self, desktop=False, mobile=False):
 		if desktop:

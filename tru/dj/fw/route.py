@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
-######################################################################
-##                                                                  ##
-##             Copyright (c) 2011, Tomasz Hławiczka                 ##
-##                       All Rights Reserved.                       ##
-##                                                                  ##
-##             http://www.tru.pl                                    ##
-##                                                                  ##
-######################################################################
+####################################################################
+#                                                                  #
+#             Copyright (c) 2011, Tomasz Hławiczka                 #
+#                       All Rights Reserved.                       #
+#                                                                  #
+#             http://www.tru.pl                                    #
+#                                                                  #
+####################################################################
 
 import copy
 import logging
@@ -19,7 +18,6 @@ from tru.dj.responses import FileInMemory
 
 log = logging.getLogger(__name__)
 
-# ----------------------------------------------------------------------------
 
 class IRoute(object):
 	def build(self, name, parent):
@@ -28,7 +26,7 @@ class IRoute(object):
 		return None
 
 	def name(self):
-		return self._name;
+		return self._name
 
 	def generate(self, request, ABS_URL=False, **kwargs):
 
@@ -37,18 +35,14 @@ class IRoute(object):
 		real_route = WebMgr._routes._routenames.get(route_name)
 		path = WebMgr._routes.generate(real_route, **kwargs) or ''
 
-		#print route_name, real_route, kwargs, WebMgr._routes.generate(real_route, **kwargs)
+		# print route_name, real_route, kwargs, WebMgr._routes.generate(real_route, **kwargs)
 
 		if ABS_URL is True:
 			return settings.BASE_URL + path
 		return path
 
-	# ----------------------------------------------------------------------------
-
 	def build(self, member_name, comp):
 		pass
-
-	# ----------------------------------------------------------------------------
 
 	def GetApplication(self, request):
 		return None
@@ -56,9 +50,6 @@ class IRoute(object):
 	def GetMethod(self, request):
 		return None
 
-	# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
 
 class Route(IRoute):
 	def __init__(self, url, **route_params):
@@ -73,7 +64,7 @@ class Route(IRoute):
 		self._order = 0
 		self._requirements = route_params.pop('requirements', None) or {}
 
-		for k,v in list(route_params.items()):
+		for k, v in list(route_params.items()):
 			if callable(v):
 				self._adapters[k] = v
 			else:
@@ -113,7 +104,7 @@ class Route(IRoute):
 		new._more_args = args + self._more_args
 		new._more_kwargs = kwargs
 		new._more_kwargs.update(self._more_kwargs)
-		new._adapters.update( self._adapters )
+		new._adapters.update(self._adapters)
 		return new
 
 	def __str__(self):
@@ -126,13 +117,13 @@ class Route(IRoute):
 	def name(self):
 		return self._name
 
-	#def merge(self, ucr):
-		#n = self.clone()
-		#n._prev = ucr
-		#return n;
+	# def merge(self, ucr):
+	# 	n = self.clone()
+	# 	n._prev = ucr
+	# 	return n;
 
-	#def extract(self):
-		#return self._prev or URLCaller.default()
+	# def extract(self):
+	# 	return self._prev or URLCaller.default()
 
 	def __call__(self, *args, **kwargs):
 
@@ -142,8 +133,8 @@ class Route(IRoute):
 		if self._more_args:
 			args = self._more_args + args
 
-		r_kwargs = copy.copy( self._route_params )
-		r_kwargs.update( self._more_kwargs )
+		r_kwargs = copy.copy(self._route_params)
+		r_kwargs.update(self._more_kwargs)
 
 		for k, v in list(kwargs.items()):
 			if k in self._adapters:
@@ -168,22 +159,21 @@ class Route(IRoute):
 		if 'ABS_URL' in r_kwargs:
 			ABS_URL = r_kwargs.pop('ABS_URL')
 
-#		for k,v in r_kwargs.items():
-#			if type(v) is unicode:
-#				r_kwargs[k] = v
+		# for k,v in r_kwargs.items():
+		# 	if type(v) is unicode:
+		# 		r_kwargs[k] = v
 
 		r_kwargs['action'] = self._action_name
 		r_kwargs['controller'] = self._component.__class__.__name__
 		return self.generate(request, ABS_URL, **r_kwargs) + anchor
 
-# ----------------------------------------------------------------------------
 
 class StaticRoute(Route):
 
-	def __init__(self, url, local_path, binary=False ):
+	def __init__(self, url, local_path, binary=False):
 		super(StaticRoute, self).__init__(url)
 		self._url = '/' + url.strip('/')
-		self.content = FileInMemory( path=local_path, always_send=True, binary=binary )
+		self.content = FileInMemory(path=local_path, always_send=True, binary=binary)
 
 	def __call__(self):
 		return self._url
@@ -191,7 +181,6 @@ class StaticRoute(Route):
 	def Execute(self, request):
 		return self.content.Response(request)
 
-# ----------------------------------------------------------------------------
 
 class DirRoute(Route):
 
@@ -210,10 +199,9 @@ class DirRoute(Route):
 			return None
 
 		full_path = request.environ['PATH_INFO']
-		if not full_path.startswith( self._base_url + '/' ):
+		if not full_path.startswith(self._base_url + '/'):
 			return None
 
-		path = full_path[len(self._base_url)+1:]
+		path = full_path[len(self._base_url) + 1:]
 
 		return serve(request, path=path, document_root=self._local_path)
-

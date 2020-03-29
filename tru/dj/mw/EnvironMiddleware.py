@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import sys
 import re
 import datetime
@@ -39,6 +37,7 @@ def EnvironMiddleware(get_response):
 
 # ----------------------------------------------------------------------------
 
+
 def AccessLogMiddleware(get_response):
 
 	def process_request(request):
@@ -52,10 +51,10 @@ def AccessLogMiddleware(get_response):
 			endpoint = getattr(request, 'ENDPOINT', 'Unknown-endpoint')
 			status = 'HTTP{}'.format(response.status_code) if response else 'Exception'
 			if settings.DEBUG:
-				stats = '[%.4f   \033[93m%5d\033[0m   %.4f]' % ( __end-__begin, FW.WebMgr.Local.queries_counter, FW.WebMgr.Local.queries_timer)
+				stats = '[%.4f   \033[93m%5d\033[0m   %.4f]' % (__end - __begin, FW.WebMgr.Local.queries_counter, FW.WebMgr.Local.queries_timer)
 				log_access.info('%s \033[90m%s\033[0m %s \033[92m%s %s\033[0m [\033[94m%s\033[0m]' % (stats, request.META['REMOTE_ADDR'], request.method, request.full_url, status, endpoint))
 			elif getattr(response, 'suppress_access_log', False) is not True:
-				stats = '[%.4f   %5d   %.4f]' % (__end-__begin, FW.WebMgr.Local.queries_counter, FW.WebMgr.Local.queries_timer)
+				stats = '[%.4f   %5d   %.4f]' % (__end - __begin, FW.WebMgr.Local.queries_counter, FW.WebMgr.Local.queries_timer)
 				log_access.info('%s %s %s %s %s [%s]' % (stats, request.META['REMOTE_ADDR'], request.method, request.full_url, status, endpoint))
 
 			if response and response.status_code == 404:

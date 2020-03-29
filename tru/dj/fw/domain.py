@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import logging
 import settings
 import os
@@ -8,11 +6,10 @@ import types
 import copy
 import datetime
 
-from .mgr   import WebMgr
+from .mgr import WebMgr
 
 log = logging.getLogger(__name__)
 
-# ----------------------------------------------------------------------------
 
 class DomainMeta(type):
 
@@ -23,33 +20,22 @@ class DomainMeta(type):
 
 		return new_class
 
-# ----------------------------------------------------------------------------
 
 class Domain(object, metaclass=DomainMeta):
 
-	_instance       = None
+	_instance = None
 
-	# ----------------------------------------------------------------------------
+	def __new__(cls):
+		if not cls._instance:
+			cls._instance = object.__new__(cls)
 
-	def __new__(type):
-		if not type._instance:
-			type._instance = object.__new__(type)
-
-		return type._instance
-
-	# ----------------------------------------------------------------------------
+		return cls._instance
 
 	def __str__(self):
 		return self.__class__.__name__
 
-	# ----------------------------------------------------------------------------
-
 	def SessionHandler(self, request):
 		return None
 
-	# ----------------------------------------------------------------------------
-
 	def LoginHandler(self, request, app, func):
 		return None, None
-
-	# ----------------------------------------------------------------------------

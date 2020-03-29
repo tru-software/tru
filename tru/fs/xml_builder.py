@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import logging
 import os
 import xmlwitch
@@ -10,6 +8,7 @@ try:
 	str_u = str
 except NameError:
 	str_u = str
+
 
 class XMLBuilder(xmlwitch.Builder):
 
@@ -31,18 +30,18 @@ class XMLBuilder(xmlwitch.Builder):
 
 		data = str_u(self).encode('utf8')
 
-		with open(self.filepath+'.tmp', 'wb') as f:
+		with open(self.filepath + '.tmp', 'wb') as f:
 			f.write(data)
 
 		dest_filename = '{}.gz'.format(self.filepath)
 		with gzip.GzipFile(dest_filename + '.tmp', mode='wb', compresslevel=9) as output:
 			output.write(data)
 
-		os.rename(self.filepath+'.tmp', self.filepath)
-		os.rename(dest_filename+'.tmp', dest_filename)
+		os.rename(self.filepath + '.tmp', self.filepath)
+		os.rename(dest_filename + '.tmp', dest_filename)
 
 		if self.mtime is not None:
-			#mtime = max(self.mtime, settings.BOOT_TIME)
+			# mtime = max(self.mtime, settings.BOOT_TIME)
 			mtime = self.mtime
 			mtime = time.mktime(mtime.timetuple())
 			os.utime(self.filepath, (mtime, mtime))

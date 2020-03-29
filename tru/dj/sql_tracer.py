@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import time
 import traceback
 import logging
@@ -9,8 +7,10 @@ from django.db.backends.utils import CursorWrapper
 
 log = logging.getLogger(__name__)
 
+
 class GlobalQueriesCounter(object):
 	index = 0
+
 
 class CursorDebugWrapperWithBacktrace(CursorWrapper):
 
@@ -46,14 +46,14 @@ class CursorDebugWrapperWithBacktrace(CursorWrapper):
 				if self.__print_on_console:
 					GlobalQueriesCounter.index += 1
 					print(("\033[93m%d\033[0m. \033[94m%s\033[0m \033[93m%s\033[0m" % (GlobalQueriesCounter.index, getattr(self.WebMgr.Local.request, 'CURRENT_ENDPOINT', '<unknown>'), stop - start)))
-					#print "\033[92m%s\033[0m %s" % (sql, params)
+					# print "\033[92m%s\033[0m %s" % (sql, params)
 					print(("\033[92m%s\033[0m" % (self.cursor.query, )))
-					if self.WebMgr.Local.sql_trace >= 2: # and self.WebMgr.current_web_environ is not None:
+					if self.WebMgr.Local.sql_trace >= 2:  # and self.WebMgr.current_web_environ is not None:
 						print("")
 						print((''.join(self.bt())))
 						print("")
 				else:
-					#sql = self.db.ops.last_executed_query(self.cursor, sql, params)
+					# sql = self.db.ops.last_executed_query(self.cursor, sql, params)
 					if not hasattr(self.db, '_queries_log'):
 						self.db._queries_log = []
 
@@ -87,7 +87,7 @@ class CursorDebugWrapperWithBacktrace(CursorWrapper):
 					GlobalQueriesCounter.index += 1
 					print(("\033[93m%d\033[0m. \033[94m%s\033[0m \033[93m%s\033[0m" % (GlobalQueriesCounter.index, getattr(self.WebMgr.Local.request, 'CURRENT_ENDPOINT', '<unknown>'), stop - start)))
 					print(("\033[92m%s\033[0m %s" % (sql, param_list)))
-					if self.WebMgr.Local.sql_trace >= 2: # and self.WebMgr.current_web_environ != None:
+					if self.WebMgr.Local.sql_trace >= 2:  # and self.WebMgr.current_web_environ != None:
 						print("")
 						print((''.join(self.bt())))
 						print("")

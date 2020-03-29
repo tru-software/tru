@@ -25,7 +25,9 @@ class RequestException(Exception):
 	def clone(self, ns=None):
 		return copy.copy(self)
 
+
 WebException = RequestException
+
 
 class InputException(RequestException):
 	"""
@@ -75,10 +77,12 @@ class AccessException(RequestException):
 		else:
 			super(AccessException, self).__init__(profile, help)
 
+
 class ExpireSessionException(RequestException):
 	"""
 		Użytkownikowi skonczyła się sesja.
 	"""
+
 	def __init__(self, msg, help=None):
 		super(ExpireSessionException, self).__init__(msg, help)
 
@@ -87,6 +91,7 @@ class LogicException(RequestException):
 	"""
 		Operacja nie ma sensu.
 	"""
+
 	def __init__(self, msg=None, help=None):
 		super(LogicException, self).__init__(msg, help)
 
@@ -95,6 +100,7 @@ class LoginRequiredException(AccessException):
 	"""
 		Użytkownik musi się zalogować.
 	"""
+
 	def __init__(self, msg='Użytkownik musi się zalogować', help=None):
 		super(LoginRequiredException, self).__init__(None, msg, help)
 
@@ -133,7 +139,7 @@ class JSONResponse(object):
 
 		response = HttpResponse(json.dumps(self.serialize()).encode('utf-8'), content_type='application/json')
 
-		#response["Content-Type"] = "application/json"
+		# response["Content-Type"] = "application/json"
 		response["Cache-Control"] = "no-store"
 		response["Pragma"] = "no-cache"
 
@@ -207,6 +213,7 @@ class ErrorsList(RequestException):
 	sucess_response = {
 		'success': True
 	}
+
 	def get_json(self):
 		if self._exc:
 			return {

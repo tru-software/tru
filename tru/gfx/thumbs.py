@@ -1,4 +1,5 @@
-import os, sys
+import os
+import sys
 from PIL import Image, ImageEnhance
 from io import BytesIO
 
@@ -20,25 +21,15 @@ import mimetypes
 mimetypes.init()
 
 try:
-	import iptcinfo3
+	import iptcinfo3  # noqa
 except ImportError:
 	iptcinfo3 = None
 
 log = logging.getLogger(__name__)
 
-# -------------------------------------------------------------------
 
 class ThumbError(Exception):
 	pass
-
-# -------------------------------------------------------------------
-
-try:
-	range = xrange
-except NameError:
-	pass
-
-# -------------------------------------------------------------------
 
 
 def Transform(source, ops):
@@ -89,10 +80,10 @@ def Transform(source, ops):
 
 	return source
 
-# -------------------------------------------------------------------
 
 class FakeImage:
 	""" For size calculations """
+
 	def __init__(self, size):
 		self.size = size
 
@@ -100,10 +91,8 @@ class FakeImage:
 		return FakeImage(dim)
 
 	def crop(self, c):
-		x0,y0,x1,y1 = c
+		x0, y0, x1, y1 = c
 		return FakeImage((max(x1 - x0, 0), max(y1 - y0, 0)))
-
-# -------------------------------------------------------------------
 
 
 class Operations(object):
@@ -130,7 +119,7 @@ class Operations(object):
 		def __init__(self):
 			pass
 
-		exif_orientation_tag = 0x0112 # contains an integer, 1 through 8
+		exif_orientation_tag = 0x0112  # contains an integer, 1 through 8
 		exif_transpose_sequences = [  # corresponding to the following
 			[],
 			[Image.FLIP_LEFT_RIGHT],
@@ -149,7 +138,6 @@ class Operations(object):
 				return im
 			return functools.reduce(lambda im, op: im.transpose(op), seq, im)
 
-
 	class FitWidth(TransformSize):
 
 		def Exec(self, img):
@@ -163,21 +151,20 @@ class Operations(object):
 			if not self.h:
 				# scale down to fit width
 				if img_w > self.w:
-					new_h = max(int(img_h * self.w/img_w), 1)
+					new_h = max(int(img_h * self.w / img_w), 1)
 					img = img.resize((self.w, new_h), Image.ANTIALIAS)
 			else:
 				# scale down
 				if img_w > self.w or img_h > self.h:
-					scale = max(float(img_w)/self.w, float(img_h)/self.h)
-					new_w = max(int(img_w/scale), 1)
-					new_h = max(int(img_h/scale), 1)
+					scale = max(float(img_w) / self.w, float(img_h) / self.h)
+					new_w = max(int(img_w / scale), 1)
+					new_h = max(int(img_h / scale), 1)
 					img = img.resize((new_w, new_h), Image.ANTIALIAS)
 
 			return img
 
 		def GetFinalSize(self, img_w, img_h):
 			return self.Exec(FakeImage((img_w, img_h))).size
-
 
 	class FitAll(TransformSize):
 
@@ -192,20 +179,19 @@ class Operations(object):
 			# minimal scale and crop
 			if img_w > self.w or img_h > self.h:
 
-				if float(img_w)/img_h <= float(self.w)/self.h:
-					img = img.resize((self.w, int(img_h*self.w/img_w)), Image.ANTIALIAS)
+				if float(img_w) / img_h <= float(self.w) / self.h:
+					img = img.resize((self.w, int(img_h * self.w / img_w)), Image.ANTIALIAS)
 					img_w, img_h = img.size
-					img = img.crop((int((img_w-self.w)/4), int((img_h-self.h)/2), int((img_w-self.w)/4+self.w), int((img_h-self.h)/2+self.h)))
+					img = img.crop((int((img_w - self.w) / 4), int((img_h - self.h) / 2), int((img_w - self.w) / 4 + self.w), int((img_h - self.h) / 2 + self.h)))
 				else:
-					img = img.resize((int(img_w*self.h/img_h), self.h), Image.ANTIALIAS)
+					img = img.resize((int(img_w * self.h / img_h), self.h), Image.ANTIALIAS)
 					img_w, img_h = img.size
-					img = img.crop((int((img_w-self.w)/2), int((img_h-self.h)/4), int((img_w-self.w)/2+self.w), int((img_h-self.h)/4+self.h)))
+					img = img.crop((int((img_w - self.w) / 2), int((img_h - self.h) / 4), int((img_w - self.w) / 2 + self.w), int((img_h - self.h) / 4 + self.h)))
 
 			return img
 
 		def GetFinalSize(self, img_w, img_h):
 			return self.Exec(FakeImage((img_w, img_h))).size
-
 
 	class MaxBox(TransformSize):
 
@@ -217,17 +203,16 @@ class Operations(object):
 			img_w, img_h = img.size
 
 			if img_w > self.w or img_h > self.h:
-				scale = min(float(self.w)/img_w, float(self.h)/img_h)
+				scale = min(float(self.w) / img_w, float(self.h) / img_h)
 
-				new_w = max(int(img_w*scale), 1)
-				new_h = max(int(img_h*scale), 1)
+				new_w = max(int(img_w * scale), 1)
+				new_h = max(int(img_h * scale), 1)
 				img = img.resize((new_w, new_h), Image.ANTIALIAS)
 
 			return img
 
 		def GetFinalSize(self, img_w, img_h):
 			return self.Exec(FakeImage((img_w, img_h))).size
-
 
 	class Force(TransformSize):
 
@@ -246,14 +231,13 @@ class Operations(object):
 		def GetFinalSize(self, img_w, img_h):
 			return self.Exec(FakeImage((img_w, img_h))).size
 
-
 	class Manual(TransformSize):
 
 		def __init__(self, width, height, crop):
 			self.w = width
 			self.h = height
 			self.c = crop  # (left, top, width, height)
-			if crop == (0,0,0,0):
+			if crop == (0, 0, 0, 0):
 				self.c = None
 
 		def Exec(self, img):
@@ -266,7 +250,7 @@ class Operations(object):
 				left, top, width, height = self.c
 				if width > 0 and height > 0:
 					img_w, img_h = img.size
-					img = img.crop((max(left, 0), max(top, 0), min(left+width, img_w), min(top+height, img_h)))
+					img = img.crop((max(left, 0), max(top, 0), min(left + width, img_w), min(top + height, img_h)))
 
 			return img
 
@@ -276,7 +260,7 @@ class Operations(object):
 	class Color(Transform):
 
 		def __init__(self, value):
-			self.v = 1+float(value)/100
+			self.v = 1 + float(value) / 100
 
 		def Exec(self, img):
 			return ImageEnhance.Color(img).enhance(self.v)
@@ -288,7 +272,6 @@ class Operations(object):
 	class Brightness(Color):
 		def Exec(self, img):
 			return ImageEnhance.Brightness(img).enhance(self.v)
-
 
 	class Watermark(Transform):
 
@@ -312,17 +295,17 @@ class Operations(object):
 
 				frame = self.frame
 
-				frame = frame.resize( (int(im.size[0]*.9), int(im.size[1]*.9)), Image.ANTIALIAS)
+				frame = frame.resize((int(im.size[0] * .9), int(im.size[1] * .9)), Image.ANTIALIAS)
 				w, h = frame.size
-				layer.paste(frame, ( int((im.size[0] - w) / 2), int((im.size[1] - h) / 2)))
+				layer.paste(frame, (int((im.size[0] - w) / 2), int((im.size[1] - h) / 2)))
 				im = Image.composite(layer, im, layer)
 
 				layer = Image.new('RGBA', im.size, (0, 0, 0, 0))
 
-				ratio = min(float(im.size[0]*0.9) / mark.size[0], float(im.size[1]*0.9) / mark.size[1])
+				ratio = min(float(im.size[0] * 0.9) / mark.size[0], float(im.size[1] * 0.9) / mark.size[1])
 				ratio = min(ratio, 1.0)
 			else:
-				ratio = min(float(im.size[0]*.9) / mark.size[0], float(im.size[1]*.9) / mark.size[1])
+				ratio = min(float(im.size[0] * .9) / mark.size[0], float(im.size[1] * .9) / mark.size[1])
 
 			w = int(mark.size[0] * ratio)
 			h = int(mark.size[1] * ratio)
@@ -331,7 +314,6 @@ class Operations(object):
 			layer.paste(mark, (int((im.size[0] - w) / 2), int((im.size[1] - h) / 2)))
 
 			return Image.composite(layer, im, layer)
-
 
 	class SaveToBuf(Base):
 
@@ -343,8 +325,8 @@ class Operations(object):
 			self.metadata = metadata if metadata is not None else False
 			self.bgcolor = bgcolor or (255, 255, 255)
 
-			#if iptcinfo3 is None and self.metadata:
-				#raise ImportError("Cannot import iptcinfo3 module")
+			# if iptcinfo3 is None and self.metadata:
+			# 	raise ImportError("Cannot import iptcinfo3 module")
 
 		def Clone(self, format=None, quality=None, optimize=None, progressive=None, metadata=None, bgcolor=None):
 			return Operations.SaveToBuf(
@@ -373,7 +355,7 @@ class Operations(object):
 			if fmt not in ('GIF', 'PNG', 'JPEG', 'WEBP'):
 				fmt = 'JPEG'
 
-			if fmt != 'GIF': # or APNG or WEBP - TODO
+			if fmt != 'GIF':  # or APNG or WEBP - TODO
 				frames = first_frame
 
 			if fmt == 'GIF':
@@ -400,7 +382,7 @@ class Operations(object):
 					)
 				else:
 					# FIXME: dlaczego jest potrzebny poniższy hack
-					first_frame.info['duration']=0
+					first_frame.info['duration'] = 0
 
 					save_params = dict(optimize=self.optimize)
 			elif fmt == 'JPEG':
@@ -425,7 +407,6 @@ class Operations(object):
 			else:
 				save_params = {}
 
-
 			if self.metadata is True and fmt == 'JPEG' and src.format == 'JPEG':
 
 				if iptcinfo3 is None:
@@ -449,8 +430,6 @@ class Operations(object):
 
 			first_frame.save(buf, fmt, **save_params)
 
-
-# ------------------------------------------------------------------------
 
 def CreateThumb(image_path, thumb_path, operations, save, file_perms=0o644):
 
@@ -478,14 +457,12 @@ def CreateThumb(image_path, thumb_path, operations, save, file_perms=0o644):
 		log.exception("Cannot create thumbnail '{}': {}".format(image_path, e))
 		raise ThumbError("Cannot create thumbnail: {}".format(e))
 
-# ------------------------------------------------------------------------
 
 # Callbacks for image opitmisations: pngquant, gifsicle, jpegoptim;
 # See: CreateThumb, ImageExternalOpt
 # For best web performace use background process (like celery).
 CreateThumb.OnNewImage = []
 
-# ------------------------------------------------------------------------
 
 def ImageExternalOpt(image_path, params={}):
 
@@ -542,7 +519,6 @@ def ImageExternalOpt(image_path, params={}):
 			log.warn("ImageExternalOpt: calling {} failed with code {}".format(pargs, process.returncode))
 			return (org_size, org_size)
 
-
 	if not os.path.isfile(output):
 		raise ValueError('Cannot opt image ({}): "{}" -> "{}"'.format(process.returncode, image_path, output))
 
@@ -569,19 +545,16 @@ def ImageExternalOpt(image_path, params={}):
 
 	return (org_size, opt_size)
 
-# ------------------------------------------------------------------------
 
 def GetImageSize(path):
 
-	if not os.path.isfile( path ):
+	if not os.path.isfile(path):
 		return None
 
 	try:
-		with Image.open( path ) as im:
+		with Image.open(path) as im:
 			return im.size
 	except IOError:
 		pass
 
 	return None
-
-# ------------------------------------------------------------------------

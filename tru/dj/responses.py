@@ -1,15 +1,15 @@
-# -*- coding: utf-8 -*-
-######################################################################
-##                                                                  ##
-##             Copyright (c) 2010, Tomasz Hławiczka                 ##
-##                       All Rights Reserved.                       ##
-##                                                                  ##
-##             http://www.tru.pl                                    ##
-##                                                                  ##
-######################################################################
+####################################################################
+#                                                                  #
+#             Copyright (c) 2010, Tomasz Hławiczka                 #
+#                       All Rights Reserved.                       #
+#                                                                  #
+#             http://www.tru.pl                                    #
+#                                                                  #
+####################################################################
 
 import os
 import stat
+import logging
 from django.conf import settings
 import mimetypes
 import json
@@ -31,6 +31,9 @@ from ..utils.backtrace import GetTraceback
 __all__ = ['ImageResponse', 'NoCacheHttpResponse', 'ResponseJsonSuccess', 'FileInMemory', 'RobotsTxtFactory', 'SendFileResponse', 'RedirectWithJavaScriptResponse']
 
 
+log = logging.getLogger(__name__)
+
+
 class ImageResponse(StreamingHttpResponse):
 
 	mimes = {
@@ -44,7 +47,7 @@ class ImageResponse(StreamingHttpResponse):
 
 	def __init__(self, img, format='PNG', nocache=False):
 
-		if not format in ImageResponse.mimes:
+		if format not in ImageResponse.mimes:
 			raise ValueError("Incorrect image format: '%s', choose one of %r" % (format, list(ImageResponse.mimes.keys())))
 
 		if not hasattr(img, 'read'):
@@ -56,8 +59,8 @@ class ImageResponse(StreamingHttpResponse):
 
 		super(ImageResponse, self).__init__(content, content_type=ImageResponse.mimes[format])
 		if nocache:
-			self[ 'Cache-Control' ] = 'must-revalidate'
-			self[ 'Pragma'        ] = 'no-cache'
+			self['Cache-Control'] = 'must-revalidate'
+			self['Pragma'] = 'no-cache'
 
 
 class NoCacheHttpResponse(HttpResponse):
@@ -66,8 +69,8 @@ class NoCacheHttpResponse(HttpResponse):
 
 	def __init__(self, content, last_modify=None, etag=None, content_type='text/html', **kwargs):
 		super(NoCacheHttpResponse, self).__init__(content, content_type=content_type, **kwargs)
-#		if last_modify:
-#			self[ 'Last-Modified' ] = str( last_modify )
+		# if last_modify:
+		# 	self[ 'Last-Modified' ] = str( last_modify )
 		if etag is not None:
 			self['ETag'] = etag
 
@@ -75,12 +78,14 @@ class NoCacheHttpResponse(HttpResponse):
 		self['Cache-Control'] = 'no-cache, no-store, must-revalidate'
 		self['Pragma'] = 'no-cache'
 
-#		self[ 'Expires'       ] = 'Mon, 26 Jul 2007 05:00:00 GMT'
-#		self[ 'Last-Modified' ] = 'Mon, 26 Jul 2030 05:00:00 GMT' # datetime.strftime( 'D, d M Y H:i:s' ) + ' GMT'
-#		self[ 'Cache-Control' ] = 'post-check=0, pre-check=0'
+		# self[ 'Expires'       ] = 'Mon, 26 Jul 2007 05:00:00 GMT'
+		# self[ 'Last-Modified' ] = 'Mon, 26 Jul 2030 05:00:00 GMT' # datetime.strftime( 'D, d M Y H:i:s' ) + ' GMT'
+		# self[ 'Cache-Control' ] = 'post-check=0, pre-check=0'
 
 
 __success = json.dumps({'success': True}).encode('utf8')
+
+
 def ResponseJsonSuccess():
 	return NoCacheHttpResponse(__success, content_type="application/json")
 
@@ -91,7 +96,6 @@ class FileInMemory:
 	last_modifcation = None
 	mimetype = ''
 
-
 	def __init__(self, path, binary=False, always_send=False, reload=False, status=200):
 		self.path = path
 		self.reload = reload
@@ -99,13 +103,12 @@ class FileInMemory:
 		self.last_modifcation = os.stat(path)
 		self.mimetype = mimetypes.guess_type(path)[0] or 'application/octet-stream'
 		self.http_date = http_date(self.last_modifcation[stat.ST_MTIME])
-		self.always_send=always_send
+		self.always_send = always_send
 		self.crc = None
 		self.content = None
 		self.status = status
 
 		self.Load()
-
 
 	def Load(self):
 		if self.binary:
@@ -128,18 +131,17 @@ class FileInMemory:
 		if self.reload is True:
 			self.Load()
 		elif self.always_send is False:
-			try:
-				if not was_modified_since(request.META.get('HTTP_IF_MODIFIED_SINCE'), statobj[stat.ST_MTIME], len(self.content)):
-					return HttpResponseNotModified()
-			except:
-				pass
+			# try:
+			if not was_modified_since(request.META.get('HTTP_IF_MODIFIED_SINCE'), statobj[stat.ST_MTIME], len(self.content)):
+				return HttpResponseNotModified()
+			# except Exception:
+			# 	pass
 
 		response = HttpResponse(self.content, status=status or self.status, content_type=self.mimetype)
 		response["Last-Modified"] = self.http_date
 		response["Content-Length"] = len(self.content)
 		response["ETag"] = self.GetCRC()
 		return response
-
 
 	def GetCRC(self):
 		return self.crc
@@ -154,9 +156,9 @@ class RedirectWithJavaScriptResponse(HttpResponse):
 window.location.href = %s;
 /* ]]> */
 </script>
-		""" % ( json.dumps( url ) );
+		""" % (json.dumps(url))
 
-		super(RedirectWithJavaScriptResponse, self).__init__( code )
+		super(RedirectWithJavaScriptResponse, self).__init__(code)
 
 
 def SendFileResponse(request, path, nocache=False, download=False, tmp=False, age=300, upload_path=False, static_path=False, content_type=None):
@@ -190,7 +192,7 @@ def SendFileResponse(request, path, nocache=False, download=False, tmp=False, ag
 				tmp_file = settings.UPLOAD_DIR + path
 				log.warn("Removing temporary file: {} for {}".format(tmp_file, request.full_url))
 				# TODO: Delayed removing files (via celery)
-				os.remove( tmp_file )
+				os.remove(tmp_file)
 
 		# log.info( "Serverd in {} file {}".format( diff.total_seconds(), path ) )
 

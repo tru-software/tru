@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
-
 import time
 import logging
 from .CatchExceptions import CatchExceptions
 from ..WebExceptions import BotRequestException
+
 
 TLR_ban_started = None
 TLR_counter = None
@@ -24,7 +23,7 @@ def PerformanceGuardMiddleware(get_response):
 		ctrl_instance, action_method, func = request._routes_adapter
 
 		if TLR_ban_started is not None:
-			if __begin - TLR_ban_started > 2*60:
+			if __begin - TLR_ban_started > 2 * 60:
 				TLR_ban_started = None
 				log.error("Zakończenie blokowania BOTów")
 			else:
@@ -34,7 +33,7 @@ def PerformanceGuardMiddleware(get_response):
 		response = get_response(request)
 		__end = time.time()
 
-		if __end-__begin > 3.0 and TLR_ban_started is None:
+		if __end - __begin > 3.0 and TLR_ban_started is None:
 			if TLR_check_start is None or __end - TLR_check_start > 15.0:
 				TLR_counter = 0
 				TLR_check_start = __end
@@ -49,4 +48,3 @@ def PerformanceGuardMiddleware(get_response):
 		return response
 
 	return process_request
-

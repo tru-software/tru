@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import logging
 
 import magic
@@ -12,6 +10,8 @@ log = logging.getLogger(__name__)
 # http://docs.python.org/library/mimetools.html
 
 # https://github.com/ahupp/python-magic
+
+
 def GetMIME(filepath):
 
 	try:

@@ -9,11 +9,12 @@ from django.test.client import MULTIPART_CONTENT
 class LazyFullURL(object):
 	def __get__(self, request, obj_type=None):
 		if not hasattr(request, '_full_url'):
-			full_url = '%s%s' % ( request.environ.get('HTTP_HOST','<HOST>'), request.environ.get('PATH_INFO','<PATH>') )
+			full_url = '%s%s' % (request.environ.get('HTTP_HOST', '<HOST>'), request.environ.get('PATH_INFO', '<PATH>'))
 			if request.environ.get('QUERY_STRING', None):
 				full_url += '?' + request.environ['QUERY_STRING']
 			request._full_url = full_url
 		return request._full_url
+
 
 class LazyFullURLProtocol(object):
 	def __get__(self, request, obj_type=None):
@@ -33,7 +34,7 @@ def ProcessRequest(url, method='GET', POST=None, headers={}, cookies={}, content
 
 	from django.core.handlers.wsgi import WSGIHandler
 	handler = WSGIHandler()
-	
+
 	from urllib.parse import urlparse, parse_qsl
 	url_parts = urlparse(url)
 
@@ -45,15 +46,15 @@ def ProcessRequest(url, method='GET', POST=None, headers={}, cookies={}, content
 
 	if method == 'GET':
 		query = parse_qsl(url_parts.query)
-		request = request_factory.get(url_parts.path, query, **headers);
+		request = request_factory.get(url_parts.path, query, **headers)
 	elif method == 'POST':
-		request = request_factory.post(url_parts.path, POST, content_type=content_type or MULTIPART_CONTENT,  **headers);
+		request = request_factory.post(url_parts.path, POST, content_type=content_type or MULTIPART_CONTENT, **headers)
 	else:
 		raise ValueError("Unsupported method type: {}".format(method))
-	
-	for k,v in cookies.items():
+
+	for k, v in cookies.items():
 		request.COOKIES[k] = v
-	
+
 	return handler.get_response(request)
 
 

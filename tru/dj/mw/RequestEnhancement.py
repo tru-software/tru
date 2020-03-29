@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import re
 import urllib
 import logging
@@ -36,7 +34,7 @@ class CheckOriginProtection:
 
 		return url.hostname and self.IsDomainRegistred(url.hostname)
 
-	#@CatchExceptions
+	# @CatchExceptions
 	def __call__(self, request):
 
 		if request.method in ('POST', 'DELETE', 'PUT'):

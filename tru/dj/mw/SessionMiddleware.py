@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+from django.http import HttpRequest
 import settings
 import sys
 import time
@@ -30,6 +29,7 @@ log = logging.getLogger(__name__)
 # ------------------------------------------------------------------------
 # ------------------------------------------------------------------------
 # ------------------------------------------------------------------------
+
 
 class SessionStore(SessionBase):
 
@@ -106,13 +106,9 @@ class SessionStore(SessionBase):
 
 	def save(self, must_create=False):
 		if must_create:
-			result = datamodel.RedisSession().Create(self.cache_key,
-						self.encode(self._get_session(no_load=must_create)),
-						self.expires)
+			result = datamodel.RedisSession().Create(self.cache_key, self.encode(self._get_session(no_load=must_create)), self.expires)
 		else:
-			result = datamodel.RedisSession().Update(self.cache_key,
-						self.encode(self._get_session(no_load=must_create)),
-						self.expires)
+			result = datamodel.RedisSession().Update(self.cache_key, self.encode(self._get_session(no_load=must_create)), self.expires)
 		if must_create and not result:
 			raise CreateError
 
@@ -153,8 +149,7 @@ class SessionStore(SessionBase):
 				max_age = self.expires.total_seconds()
 				expires = cookie_date(now + max_age)
 
-			response.set_cookie(self.key_name, self.session_key, max_age=7*24*60*60,
-				expires=cookie_date(7*24*60*60+now), domain=self.domain, path='/', secure=self.secure or None)
+			response.set_cookie(self.key_name, self.session_key, max_age=7 * 24 * 60 * 60, expires=cookie_date(7 * 24 * 60 * 60 + now), domain=self.domain, path='/', secure=self.secure or None)
 
 # ------------------------------------------------------------------------
 
@@ -166,16 +161,16 @@ class LazyUser(object):
 		return request._cached_user
 
 
-from django.http import HttpRequest
 HttpRequest.user = LazyUser()
 
 # ------------------------------------------------------------------------
 
+
 def SessionMiddleware(get_response):
 
 	session_name = 'foto_sid'
-	timeout = 60*60
-	timeout_internal = 24*60*60
+	timeout = 60 * 60
+	timeout_internal = 24 * 60 * 60
 
 	@CatchExceptions
 	def process_request(request):
@@ -210,4 +205,3 @@ def SessionMiddleware(get_response):
 	return process_request
 
 # ------------------------------------------------------------------------
-
