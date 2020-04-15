@@ -210,6 +210,13 @@ class ErrorsList(RequestException):
 		except RequestException as ex:
 			self += ex
 
+	@contextmanager
+	def catch(self, ex_type, field, msg):
+		try:
+			yield
+		except ex_type as ex:
+			self += InputException(field, msg)
+
 	sucess_response = {
 		'success': True
 	}
