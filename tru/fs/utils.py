@@ -22,8 +22,8 @@ def fix_filename(filename):
 	f = converters.replace2ascii(filename.replace(' ', '_').replace('/', '').replace('\\', ''))
 
 	m1 = re.compile('([-\'\"]+)')
-	m2 = re.compile('([^A-Za-z0-9\\._]+)')
-	m3 = re.compile('\s')
+	m2 = re.compile(r'([^A-Za-z0-9\._]+)')
+	m3 = re.compile(r'\s')
 	f = m3.sub('', m2.sub(' ', m1.sub('', f)).strip())
 
 	if len(f) < 2:
@@ -178,7 +178,7 @@ def CreateCrcLinkCRC32(filename, dir, urldir):
 
 def CreateCrcLinkMD5(filename, dir, urldir, block_size=1024 * 8):
 
-	md5 = hashlib.md5()
+	md5 = hashlib.md5()  # nosec
 	with open(dir + '/' + filename, "rb") as f:
 		while True:
 			data = f.read(block_size)
@@ -195,7 +195,7 @@ class TmpFile:
 	def __init__(self, filepath, mode='wb', perms=None):
 
 		self.filepath = filepath
-		self.filepath_tmp = filepath + '.RND{}.tmp'.format(random.randrange(0xffffffff))
+		self.filepath_tmp = filepath + '.RND{}.tmp'.format(random.randrange(0xffffffff))  # nosec
 		os.makedirs(os.path.dirname(filepath), exist_ok=True)
 		self.f = open(self.filepath_tmp, mode=mode)
 		self.perms = perms
@@ -222,7 +222,7 @@ class TmpDir:
 	def __init__(self, base_dir, perms=None):
 
 		self.base_dir = base_dir
-		self.base_dir_tmp = '{}.RND{}.tmp'.format(str(base_dir).rstrip('/'), random.randrange(0xffffffff))
+		self.base_dir_tmp = '{}.RND{}.tmp'.format(str(base_dir).rstrip('/'), random.randrange(0xffffffff))  # nosec
 		self.perms = perms
 
 		if os.path.exists(self.base_dir_tmp):
@@ -240,7 +240,7 @@ class TmpDir:
 			if self.perms is not None:
 				os.chmod(self.base_dir_tmp, self.perms)
 
-			new_tmp = '{}.RND{}.tmp'.format(str(self.base_dir).rstrip('/'), random.randrange(0xffffffff))
+			new_tmp = '{}.RND{}.tmp'.format(str(self.base_dir).rstrip('/'), random.randrange(0xffffffff))  # nosec
 
 			if os.path.exists(new_tmp):
 				raise IOError(f"Cannot create tmp dir under {new_tmp}")
@@ -248,7 +248,10 @@ class TmpDir:
 			if os.path.exists(self.base_dir):
 				os.rename(self.base_dir, new_tmp)
 				os.rename(self.base_dir_tmp, self.base_dir)
-				shutil.rmtree(new_tmp)
+				try:
+					shutil.rmtree(new_tmp)
+				except IOError:
+					log.warn(f"TmpDir: cannot remove tmp dir {self.new_tmp}")
 			else:
 				os.rename(self.base_dir_tmp, self.base_dir)
 		else:
