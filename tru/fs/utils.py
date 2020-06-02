@@ -251,14 +251,14 @@ class TmpDir:
 				try:
 					shutil.rmtree(new_tmp)
 				except IOError:
-					log.warn(f"TmpDir: cannot remove tmp dir {self.new_tmp}")
+					log.exception(f"TmpDir: cannot remove tmp dir {new_tmp}")
 			else:
 				os.rename(self.base_dir_tmp, self.base_dir)
 		else:
 			try:
 				shutil.rmtree(self.base_dir_tmp)
 			except IOError:
-				log.warn(f"TmpDir: cannot remove tmp dir {self.base_dir_tmp}")
+				log.exception(f"TmpDir: cannot remove tmp dir {self.base_dir_tmp}")
 
 		return False
 
